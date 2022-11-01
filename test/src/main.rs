@@ -1,4 +1,4 @@
-extern crate inputhook;
+extern crate skyhook;
 
 use std::fs::{self};
 
