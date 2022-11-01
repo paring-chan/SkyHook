@@ -1,6 +1,6 @@
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, time::SystemTime};
 
-use crate::types::Event;
+use crate::types::{Event, EventData};
 
 use super::CANCELLATION_TOKEN;
 
@@ -19,7 +19,7 @@ fn is_cancelled() -> bool {
     }
 }
 
-fn convert_bit(bits: Vec<u8>) -> u16 {
+fn convert_bit(bits: &[u8]) -> u16 {
     let mut result: u16 = 0;
     bits.iter().for_each(|&bit| {
         result <<= 1;
@@ -48,14 +48,20 @@ impl InputReader {
                 return;
             }
 
-            let event_type = convert_bit(vec![buffer[16], buffer[17]]);
-            let code = convert_bit(vec![buffer[18], buffer[19]]);
-            let value = convert_bit(vec![buffer[20], buffer[21]]);
+            let event_type = convert_bit(&vec![buffer[16], buffer[17]]);
+            let code = convert_bit(&vec![buffer[18], buffer[19]]);
+            let value = convert_bit(&vec![buffer[20], buffer[21]]);
 
             if event_type == 2 {
                 match value {
-                    0 => callback(Event::KeyRelease(code)),
-                    2 => callback(Event::KeyPress(code)),
+                    0 => callback(Event {
+                        time: SystemTime::now(),
+                        data: EventData::KeyRelease(code),
+                    }),
+                    2 => callback(Event {
+                        time: SystemTime::now(),
+                        data: EventData::KeyPress(code),
+                    }),
                     _ => continue,
                 };
             }

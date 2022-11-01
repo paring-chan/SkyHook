@@ -1,5 +1,6 @@
 use types::{Error, Event};
 
+#[cfg(target_os = "linux")]
 extern crate cancellation;
 
 mod platforms;
