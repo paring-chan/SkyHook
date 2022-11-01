@@ -1,15 +1,15 @@
-use std::fs;
+use std::{fs, sync::Arc, thread};
 
-use crate::platforms::linux::reader::InputReader;
+use cancellation::CancellationTokenSource;
+
+use crate::{platforms::linux::reader::InputReader, types::Error};
 
 mod reader;
 
-static mut READERS: Vec<InputReader> = vec![];
+pub static mut CANCELLATION_TOKEN: Option<Arc<CancellationTokenSource>> = None;
 
-pub fn start() {
+pub fn start() -> Result<(), Error> {
     let dir = fs::read_dir("/dev/input").expect("Failed to read /dev/input");
-
-    let mut readers: Vec<InputReader> = vec![];
 
     for path in dir {
         let filename = path.expect("Failed to get dir entry").file_name();
@@ -18,15 +18,32 @@ pub fn start() {
             None => continue,
         };
 
+        let cts = CancellationTokenSource::new();
+
+        unsafe {
+            CANCELLATION_TOKEN = Some(Arc::new(cts));
+        }
+
         if filename.starts_with("event") {
             let reader = InputReader::new(format!("/dev/input/{}", filename));
-            readers.append(&mut vec![reader]);
+
+            thread::spawn(move || reader.run());
         }
     }
 
-    println!("{:?}", readers);
+    Ok(())
+}
 
-    unsafe {
-        READERS = readers;
+// TODO
+#[allow(dead_code)]
+pub fn stop() {
+    let token = unsafe { &CANCELLATION_TOKEN };
+
+    if let Some(token) = token {
+        token.cancel();
+
+        unsafe {
+            CANCELLATION_TOKEN = None;
+        }
     }
 }
