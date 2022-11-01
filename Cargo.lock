@@ -13,6 +13,7 @@ name = "skyhook"
 version = "0.1.0"
 dependencies = [
  "cancellation",
+ "winsafe",
 ]
 
 [[package]]
@@ -21,3 +22,9 @@ version = "0.1.0"
 dependencies = [
  "skyhook",
 ]
+
+[[package]]
+name = "winsafe"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fd38859e955532136a544e7e6a6a1239a3f4fe48ecf67c63500ec9f527f8381"

@@ -11,3 +11,4 @@ edition = "2021"
 
 [dependencies]
 cancellation = "0.1.0"
+winsafe = "0.0.5"
