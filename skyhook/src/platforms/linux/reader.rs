@@ -53,7 +53,7 @@ impl InputReader {
             let value = convert_bit(vec![buffer[20], buffer[21]]);
 
             if event_type == 2 {
-                let status = match value {
+                match value {
                     0 => callback(Event::KeyRelease(code)),
                     2 => callback(Event::KeyPress(code)),
                     _ => continue,
