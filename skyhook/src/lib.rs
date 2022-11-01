@@ -4,5 +4,5 @@ mod platforms;
 pub mod types;
 
 pub fn run() {
-    platforms::linux::start();
+    platforms::linux::start().unwrap();
 }
