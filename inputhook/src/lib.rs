@@ -1,3 +1,5 @@
-pub fn test() -> &'static str {
-    "Hello, world!"
+mod platforms;
+
+pub fn test() -> String {
+    String::from("Hello, world!")
 }
