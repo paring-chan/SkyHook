@@ -1,8 +1,8 @@
-pub enum EventType {
-    KeyPress,
+#[derive(Debug)]
+pub enum Event {
+    KeyPress(u16),
+    KeyRelease(u16),
 }
-
-pub struct Event {}
 
 #[derive(Debug)]
 pub struct Error {
