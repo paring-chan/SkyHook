@@ -3,8 +3,17 @@
 version = 3
 
 [[package]]
+name = "cancellation"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7a879c84c21f354f13535f87ad119ac3be22ebb9097b552a0af6a78f86628c4"
+
+[[package]]
 name = "skyhook"
 version = "0.1.0"
+dependencies = [
+ "cancellation",
+]
 
 [[package]]
 name = "skyhook-test"

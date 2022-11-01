@@ -1,5 +1,8 @@
-mod platforms;
+extern crate cancellation;
 
-pub fn test() -> String {
-    String::from("Hello, world!")
+mod platforms;
+pub mod types;
+
+pub fn run() {
+    platforms::linux::start();
 }
