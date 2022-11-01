@@ -30,7 +30,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         if filename.starts_with("event") {
             let reader = InputReader::new(format!("/dev/input/{}", filename));
 
-            thread::spawn(move || reader.run());
+            thread::spawn(move || reader.run(callback));
         }
     }
 

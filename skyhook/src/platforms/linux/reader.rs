@@ -1,5 +1,7 @@
 use std::{fs::File, io::Read};
 
+use crate::types::Event;
+
 use super::CANCELLATION_TOKEN;
 
 #[derive(Debug)]
@@ -17,11 +19,11 @@ fn is_cancelled() -> bool {
     }
 }
 
-fn convert_bit(bits: Vec<u8>) -> i16 {
-    let mut result: i16 = 0;
+fn convert_bit(bits: Vec<u8>) -> u16 {
+    let mut result: u16 = 0;
     bits.iter().for_each(|&bit| {
         result <<= 1;
-        result ^= bit as i16;
+        result ^= bit as u16;
     });
     result
 }
@@ -31,7 +33,7 @@ impl InputReader {
         InputReader { file_path }
     }
 
-    pub fn run(&self) {
+    pub fn run(&self, callback: fn(Event)) {
         let mut file = File::open(&self.file_path).expect("Failed to open file");
 
         loop {
@@ -52,12 +54,10 @@ impl InputReader {
 
             if event_type == 2 {
                 let status = match value {
-                    0 => "Release",
-                    2 => "Press",
+                    0 => callback(Event::KeyRelease(code)),
+                    2 => callback(Event::KeyPress(code)),
                     _ => continue,
                 };
-
-                println!("{} {}", code, status);
             }
         }
     }
