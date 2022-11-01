@@ -2,10 +2,9 @@ use std::{fs, sync::Arc, thread};
 
 use cancellation::CancellationTokenSource;
 
-use crate::{
-    platforms::linux::reader::InputReader,
-    types::{Error, Event},
-};
+use crate::types::{Error, Event};
+
+use self::reader::start_reader;
 
 mod reader;
 
@@ -17,7 +16,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
     for path in dir {
         let filename = path.expect("Failed to get dir entry").file_name();
         let filename = match filename.to_str() {
-            Some(v) => v,
+            Some(v) => String::from(v),
             None => continue,
         };
 
@@ -28,9 +27,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         }
 
         if filename.starts_with("event") {
-            let reader = InputReader::new(format!("/dev/input/{}", filename));
-
-            thread::spawn(move || reader.run(callback));
+            thread::spawn(move || start_reader(format!("/dev/input/{}", filename), callback));
         }
     }
 

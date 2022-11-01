@@ -4,11 +4,6 @@ use crate::types::{Event, EventData};
 
 use super::CANCELLATION_TOKEN;
 
-#[derive(Debug)]
-pub struct InputReader {
-    file_path: String,
-}
-
 fn is_cancelled() -> bool {
     let token = unsafe { &CANCELLATION_TOKEN };
 
@@ -28,43 +23,37 @@ fn convert_bit(bits: &[u8]) -> u16 {
     result
 }
 
-impl InputReader {
-    pub fn new(file_path: String) -> InputReader {
-        InputReader { file_path }
-    }
+pub fn start_reader(file_path: String, callback: fn(Event)) {
+    let mut file = File::open(file_path).expect("Failed to open file");
 
-    pub fn run(&self, callback: fn(Event)) {
-        let mut file = File::open(&self.file_path).expect("Failed to open file");
+    loop {
+        if is_cancelled() {
+            println!("Stop");
+            return;
+        }
 
-        loop {
-            if is_cancelled() {
-                println!("Stop");
-                return;
-            }
+        let mut buffer = [0; 24];
 
-            let mut buffer = [0; 24];
+        if let Err(_) = file.read(&mut buffer) {
+            return;
+        }
 
-            if let Err(_) = file.read(&mut buffer) {
-                return;
-            }
+        let event_type = convert_bit(&vec![buffer[16], buffer[17]]);
+        let code = convert_bit(&vec![buffer[18], buffer[19]]);
+        let value = convert_bit(&vec![buffer[20], buffer[21]]);
 
-            let event_type = convert_bit(&vec![buffer[16], buffer[17]]);
-            let code = convert_bit(&vec![buffer[18], buffer[19]]);
-            let value = convert_bit(&vec![buffer[20], buffer[21]]);
-
-            if event_type == 2 {
-                match value {
-                    0 => callback(Event {
-                        time: SystemTime::now(),
-                        data: EventData::KeyRelease(code),
-                    }),
-                    2 => callback(Event {
-                        time: SystemTime::now(),
-                        data: EventData::KeyPress(code),
-                    }),
-                    _ => continue,
-                };
-            }
+        if event_type == 2 {
+            match value {
+                0 => callback(Event {
+                    time: SystemTime::now(),
+                    data: EventData::KeyRelease(code),
+                }),
+                2 => callback(Event {
+                    time: SystemTime::now(),
+                    data: EventData::KeyPress(code),
+                }),
+                _ => continue,
+            };
         }
     }
 }
