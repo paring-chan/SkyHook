@@ -6,7 +6,10 @@ mod platforms;
 pub mod types;
 
 pub fn run() {
-    platforms::linux::start().unwrap();
+    platforms::linux::start(|event| {
+        println!("{:?}", event);
+    })
+    .unwrap();
 
     thread::park();
 }

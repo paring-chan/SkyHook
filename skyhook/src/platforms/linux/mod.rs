@@ -2,13 +2,16 @@ use std::{fs, sync::Arc, thread};
 
 use cancellation::CancellationTokenSource;
 
-use crate::{platforms::linux::reader::InputReader, types::Error};
+use crate::{
+    platforms::linux::reader::InputReader,
+    types::{Error, Event},
+};
 
 mod reader;
 
 pub static mut CANCELLATION_TOKEN: Option<Arc<CancellationTokenSource>> = None;
 
-pub fn start() -> Result<(), Error> {
+pub fn start(callback: fn(Event)) -> Result<(), Error> {
     let dir = fs::read_dir("/dev/input").expect("Failed to read /dev/input");
 
     for path in dir {
