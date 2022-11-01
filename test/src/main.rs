@@ -1,5 +1,12 @@
+use std::thread;
+
 extern crate skyhook;
 
 fn main() {
-    skyhook::run();
+    skyhook::run(|event| {
+        println!("{:?}", event);
+    })
+    .unwrap();
+
+    thread::park();
 }

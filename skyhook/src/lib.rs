@@ -1,15 +1,14 @@
-use std::thread;
+use types::{Error, Event};
 
 extern crate cancellation;
 
 mod platforms;
 pub mod types;
 
-pub fn run() {
-    platforms::linux::start(|event| {
-        println!("{:?}", event);
-    })
-    .unwrap();
+pub fn run(callback: fn(Event)) -> Result<(), Error> {
+    platforms::run(callback)
+}
 
-    thread::park();
+pub fn stop() {
+    platforms::stop()
 }
