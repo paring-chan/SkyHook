@@ -1,34 +1,64 @@
-use cancellation::CancellationTokenSource;
+use std::{fs::File, io::Read};
 
-use crate::types::Error;
+use super::CANCELLATION_TOKEN;
 
 #[derive(Debug)]
 pub struct InputReader {
-    pub file_path: String,
-    cts: Option<CancellationTokenSource>,
+    file_path: String,
+}
+
+fn is_cancelled() -> bool {
+    let token = unsafe { &CANCELLATION_TOKEN };
+
+    if let Some(token) = token {
+        token.is_canceled()
+    } else {
+        true
+    }
+}
+
+fn convert_bit(bits: Vec<u8>) -> i16 {
+    let mut result: i16 = 0;
+    bits.iter().for_each(|&bit| {
+        result <<= 1;
+        result ^= bit as i16;
+    });
+    result
 }
 
 impl InputReader {
     pub fn new(file_path: String) -> InputReader {
-        InputReader {
-            file_path: file_path,
-            cts: None,
-        }
+        InputReader { file_path }
     }
 
-    pub fn start(&self) -> Result<(), Error> {
-        if let Some(_) = self.cts {
-            return Err(Error {
-                message: String::from("Listener is already running"),
-            });
+    pub fn run(&self) {
+        let mut file = File::open(&self.file_path).expect("Failed to open file");
+
+        loop {
+            if is_cancelled() {
+                println!("Stop");
+                return;
+            }
+
+            let mut buffer = [0; 24];
+
+            if let Err(_) = file.read(&mut buffer) {
+                return;
+            }
+
+            let event_type = convert_bit(vec![buffer[16], buffer[17]]);
+            let code = convert_bit(vec![buffer[18], buffer[19]]);
+            let value = convert_bit(vec![buffer[20], buffer[21]]);
+
+            if event_type == 2 {
+                let status = match value {
+                    0 => "Release",
+                    2 => "Press",
+                    _ => continue,
+                };
+
+                println!("{} {}", code, status);
+            }
         }
-
-        Ok(())
-    }
-
-    pub fn stop(&mut self) {
-        let cts = match self.cts {
-            None
-        };
     }
 }
