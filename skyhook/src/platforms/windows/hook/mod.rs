@@ -1,19 +1,21 @@
-use std::{thread::Builder, time::SystemTime};
+use std::thread::Builder;
 
 use winsafe::{
-    co::{WH, WM},
+    co::WH,
     msg::wm,
     prelude::kernel_Hthread,
     prelude::{user_Hhook, Handle},
     HHOOK, HINSTANCE,
 };
 
-use crate::types::{Error, Event, EventData};
+mod keyboard;
+
+use crate::types::{Error, Event};
 
 use super::{message::process_message, CANCELLATION_TOKEN};
 
 //#region Commons
-static mut HOOK_ID: Option<HHOOK> = None;
+pub(crate) static mut HOOK_ID: Option<HHOOK> = None;
 static mut THREAD_ID: Option<u32> = None;
 static mut CALLBACK: Option<fn(Event)> = None;
 
@@ -42,7 +44,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
     let thread = Builder::new().spawn(|| {
         let registered_hook = HHOOK::SetWindowsHookEx(
             WH::KEYBOARD_LL,
-            hook_callback,
+            keyboard::hook_callback,
             Some(HINSTANCE::NULL),
             Some(0),
         );
@@ -103,44 +105,3 @@ pub fn stop() -> Result<(), Error> {
     })
 }
 //#endregion
-
-// This is executed in another thread!
-
-#[derive(Clone, Copy)]
-struct KBDLLHOOKSTRUCT {
-    pub vk_code: u32,
-}
-
-unsafe fn get_code(lpdata: isize) -> u32 {
-    let kb = *(lpdata as *const KBDLLHOOKSTRUCT);
-
-    kb.vk_code
-}
-
-extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
-    let processed_hook_id: HHOOK = unsafe { HOOK_ID.expect("HOOK_ID is None") };
-
-    if code < 0 {
-        // Don't do anything, just return
-        return processed_hook_id.CallNextHookEx(code.into(), wparam, lparam);
-    }
-
-    match (wparam as u32).into() {
-        WM::KEYDOWN | WM::SYSKEYDOWN => unsafe {
-            CALLBACK.unwrap()(Event {
-                time: SystemTime::now(),
-                data: EventData::KeyPress(get_code(lparam) as u16),
-            });
-        },
-        WM::KEYUP | WM::SYSKEYUP => unsafe {
-            CALLBACK.unwrap()(Event {
-                time: SystemTime::now(),
-                data: EventData::KeyRelease(get_code(lparam) as u16),
-            });
-        },
-        _ => (),
-    }
-
-    // ALWAYS call CallNextHookEx
-    return processed_hook_id.CallNextHookEx(code.into(), wparam, lparam);
-}
