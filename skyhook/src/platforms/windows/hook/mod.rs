@@ -15,14 +15,14 @@ use crate::types::{Error, Event};
 use super::{message::process_message, CANCELLATION_TOKEN};
 
 //#region Commons
-pub(crate) static mut HOOK_ID: Option<HHOOK> = None;
+pub(crate) static mut KBD_HOOK_ID: Option<HHOOK> = None;
 static mut THREAD_ID: Option<u32> = None;
 static mut CALLBACK: Option<fn(Event)> = None;
 
 pub fn start(callback: fn(Event)) -> Result<(), Error> {
     unsafe {
         // return if hook is already set
-        if HOOK_ID.is_some() {
+        if KBD_HOOK_ID.is_some() {
             return Err(Error {
                 message: "Hook cannot be started if the hook is already running.".into(),
             });
@@ -50,7 +50,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         );
 
         unsafe {
-            HOOK_ID = match registered_hook {
+            KBD_HOOK_ID = match registered_hook {
                 Ok(h) => Some(h),
                 Err(err) => return Err(err),
             };
@@ -65,7 +65,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         Ok(())
     });
 
-    while let None = unsafe { HOOK_ID } {}
+    while let None = unsafe { KBD_HOOK_ID } {}
 
     if let Err(e) = thread {
         return Err(Error {
@@ -78,7 +78,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
 
 pub fn stop() -> Result<(), Error> {
     unsafe {
-        if let Some(hook_id) = HOOK_ID {
+        if let Some(hook_id) = KBD_HOOK_ID {
             match HHOOK::UnhookWindowsHookEx(hook_id) {
                 Ok(_) => (),
                 Err(err) => {

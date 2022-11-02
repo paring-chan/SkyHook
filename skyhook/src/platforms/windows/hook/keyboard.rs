@@ -4,7 +4,7 @@ use winsafe::{co::WM, prelude::user_Hhook, HHOOK};
 
 use crate::types::{Event, EventData};
 
-use super::{CALLBACK, HOOK_ID};
+use super::{CALLBACK, KBD_HOOK_ID};
 
 #[derive(Clone, Copy)]
 struct KBDLLHOOKSTRUCT {
@@ -18,7 +18,7 @@ unsafe fn get_code(lpdata: isize) -> u32 {
 }
 
 pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
-    let processed_hook_id: HHOOK = unsafe { HOOK_ID.expect("HOOK_ID is None") };
+    let processed_hook_id: HHOOK = unsafe { KBD_HOOK_ID.expect("HOOK_ID is None") };
 
     if code < 0 {
         // Don't do anything, just return
