@@ -1,8 +1,9 @@
 // safe stuff
 
-use winsafe::co::WH;
+use winsafe::{co::{WH, WM}, HHOOK, HINSTANCE};
 
-extern crate winsafe;
+use crate::types::Error;
+
 
 /*
 //#region Constants
@@ -17,47 +18,62 @@ const WH_MOUSE_LL: i32 = 14;
 */
 
 //#region Commons
-static mut hook_id: Option<winsafe::HHOOK> = None;
+static mut HOOK_ID: Option<HHOOK> = None;
 
-pub fn start() -> () {
-    /*
+pub fn start() -> Result<(), Error> {
     unsafe {
-        hook_id = Some(winsafe::HHOOK::SetWindowsHookEx(
+        let registered_hook = HHOOK::SetWindowsHookEx(
             WH::KEYBOARD_LL,
             hook_callback,
-            winsafe::HINSTANCE::NULL,
-            Some(0)));
+            Some(HINSTANCE::NULL),
+            Some(0));
 
-        match hook_id {
-            Some(x) => (),
-            None => panic!(),
-        }
-    }*/
-/*
-    unsafe {
-        let hook_id =
-            user32::SetWindowsHookExA(WH_KEYBOARD_LL, Some(hook_callback), std::ptr::null_mut(), 0);
+        let processed_hook_id = match registered_hook {
+            Ok(h) => h,
+            Err(err) => {
+                return Err(Error {message: format!("Could not start the hook. {:?}", err)}); 
+            }
+        };
 
-        // Do something
+        HOOK_ID = Some(processed_hook_id);
 
-        // Release hook
-        user32::UnhookWindowsHookEx(hook_id);
-    }*/
+        return Ok(());
+    }
 }
 
-pub fn stop() -> () {}
+pub fn stop() -> Result<(), Error> {
+    unsafe {
+        if let Some(hook_id) = HOOK_ID {
+            match HHOOK::UnhookWindowsHookEx(hook_id) {
+                Ok(_) => return Ok(()),
+                Err(err) => return Err(Error {message: format!("Could not stop the hook. {:?}", err)})
+            };
+        }
+
+        Err(Error {message: "Hook cannot be stopped before starting.".to_string()})
+    }
+}
 //#endregion
 
-extern "system" fn hook_callback(code: i32, wParam: usize, lParam: isize) -> isize {
-    /*unsafe {
-        assert!(
-            hook_id != 0,
-            format!(
-                "Windows threw an error with code {}",
-                winapi::um::errhandlingapi::GetLastError()
-            )
-        ); // GetLastError is an unsafe method
-    }*/
+extern "system" fn hook_callback(nCode: i32, wParam: usize, lParam: isize) -> isize {
+    unsafe {
+        let processed_hook_id = HOOK_ID.unwrap();
+        
+        if nCode < 0 {
+            // Don't do anything, just return
+            return processed_hook_id.CallNextHookEx(WH::from(nCode), wParam, lParam);
+        }
 
-    return 0;
+        match WM::from(wParam as u32) {
+            WM::KEYDOWN | WM::SYSKEYDOWN => {
+                // TODO: Send an event
+            },
+            WM::KEYUP | WM::SYSKEYUP => {
+                // TODO: Send an event
+            },
+            _ => ()
+        }
+    }
+
+    return 1;
 }
