@@ -21,9 +21,11 @@ pub fn stop() -> Result<(), Error> {
 pub mod windows;
 
 #[cfg(target_os = "windows")]
-pub fn run(callback: fn(Event)) {} // TODO
+pub fn run(callback: fn(Event)) -> Result<(), Error> {
+    windows::start(callback)
+}
 
 #[cfg(target_os = "windows")]
-pub fn stop() {
-    linux::stop()
+pub fn stop() -> Result<(), Error> {
+    windows::stop()
 }

@@ -1,43 +1,52 @@
-// safe stuff
+use std::{thread::Builder, time::SystemTime};
 
 use winsafe::{co::{WH, WM}, HHOOK, HINSTANCE};
 
-use crate::types::Error;
-
-
-/*
-//#region Constants
-const KEY_PRESSED: i32 = 0x8000;
-const WM_KEYDOWN: i32 = 0x0100;
-const WM_KEYUP: i32 = 0x0101;
-const WM_SYSKEYDOWN: i32 = 0x0104;
-const WM_SYSKEYUP: i32 = 0x0105;
-const WH_KEYBOARD_LL: i32 = 13;
-const WH_MOUSE_LL: i32 = 14;
-//#endregion
-*/
+use crate::types::{Error, Event, EventData};
 
 //#region Commons
 static mut HOOK_ID: Option<HHOOK> = None;
+static mut CALLBACK: Option<fn(Event)> = None;
 
-pub fn start() -> Result<(), Error> {
+pub fn start(callback: fn(Event)) -> Result<(), Error> {
     unsafe {
+        CALLBACK = Some(callback);
+    }
+
+    let thread = Builder::new().spawn(|| {
         let registered_hook = HHOOK::SetWindowsHookEx(
             WH::KEYBOARD_LL,
             hook_callback,
             Some(HINSTANCE::NULL),
             Some(0));
 
-        let processed_hook_id = match registered_hook {
-            Ok(h) => h,
-            Err(err) => {
-                return Err(Error {message: format!("Could not start the hook. {:?}", err)}); 
-            }
-        };
-
-        HOOK_ID = Some(processed_hook_id);
+        unsafe {
+            HOOK_ID = match registered_hook {
+                Ok(h) => Some(h),
+                Err(err) => return Err(err)
+            };
+        }
 
         return Ok(());
+    });
+
+    match thread {
+        Ok(processed_thread) => {
+            match processed_thread.join() {
+                Ok(result) => {
+                    match result {
+                        Err(err) => Err(Error {message: format!("Could not start the hook. {:?}", err)}),
+                        _ => Ok(())
+                    }
+                },
+                Err(err) => {
+                    Err(Error {message: format!("A panic occured in the thread. {:?}", err)})
+                }
+            }
+        },
+        Err(err) => {
+            Err(Error {message: format!("Could not create a thread for the hook. {:?}", err)})
+        }
     }
 }
 
@@ -49,31 +58,45 @@ pub fn stop() -> Result<(), Error> {
                 Err(err) => return Err(Error {message: format!("Could not stop the hook. {:?}", err)})
             };
         }
-
-        Err(Error {message: "Hook cannot be stopped before starting.".to_string()})
     }
+
+    Err(Error {message: "Hook cannot be stopped before starting.".to_string()})
 }
 //#endregion
 
-extern "system" fn hook_callback(nCode: i32, wParam: usize, lParam: isize) -> isize {
-    unsafe {
-        let processed_hook_id = HOOK_ID.unwrap();
-        
-        if nCode < 0 {
-            // Don't do anything, just return
-            return processed_hook_id.CallNextHookEx(WH::from(nCode), wParam, lParam);
-        }
+// This is executed in another thread!
+extern "system" fn hook_callback(code: i32, w_param: usize, l_param: isize) -> isize {
+    let processed_hook_id: HHOOK;
 
-        match WM::from(wParam as u32) {
-            WM::KEYDOWN | WM::SYSKEYDOWN => {
-                // TODO: Send an event
-            },
-            WM::KEYUP | WM::SYSKEYUP => {
-                // TODO: Send an event
-            },
-            _ => ()
-        }
+    unsafe {
+        processed_hook_id = HOOK_ID.unwrap();
     }
 
-    return 1;
+    if code < 0 {
+        // Don't do anything, just return
+        return processed_hook_id.CallNextHookEx(WH::from(code), w_param, l_param);
+    }
+
+    match WM::from(w_param as u32) {
+        WM::KEYDOWN | WM::SYSKEYDOWN => {
+            unsafe {
+                CALLBACK.unwrap() (Event {
+                    time: SystemTime::now(),
+                    data: EventData::KeyPress(l_param as u16),
+                });
+            }
+        },
+        WM::KEYUP | WM::SYSKEYUP => {
+            unsafe {
+                CALLBACK.unwrap() (Event {
+                    time: SystemTime::now(),
+                    data: EventData::KeyRelease(l_param as u16),
+                });
+            }
+        },
+        _ => ()
+    }
+
+    // ALWAYS call CallNextHookEx
+    return processed_hook_id.CallNextHookEx(WH::from(code), w_param, l_param);
 }
