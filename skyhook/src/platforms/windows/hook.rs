@@ -1,7 +1,7 @@
 use std::{thread::Builder, time::SystemTime};
 
 use winsafe::{
-    co::{WH, WM},
+    co::{VK, WH, WM},
     msg::wm,
     prelude::kernel_Hthread,
     prelude::{user_Hhook, Handle},
@@ -122,6 +122,23 @@ pub fn stop() -> Result<(), Error> {
 //#endregion
 
 // This is executed in another thread!
+
+#[derive(Clone, Copy)]
+#[allow(dead_code)]
+struct KBDLLHOOKSTRUCT {
+    pub vk_code: u32,
+    pub scan_code: u32,
+    pub flags: u32,
+    pub time: u32,
+    pub dw_extra_info: u32,
+}
+
+unsafe fn get_code(lpdata: isize) -> u32 {
+    let kb = *(lpdata as *const KBDLLHOOKSTRUCT);
+
+    kb.vk_code
+}
+
 extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
     let processed_hook_id: HHOOK = unsafe { HOOK_ID.expect("HOOK_ID is None") };
 
@@ -134,13 +151,13 @@ extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isi
         WM::KEYDOWN | WM::SYSKEYDOWN => unsafe {
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyPress(lparam as u16),
+                data: EventData::KeyPress(get_code(lparam) as u16),
             });
         },
         WM::KEYUP | WM::SYSKEYUP => unsafe {
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyRelease(lparam as u16),
+                data: EventData::KeyRelease(get_code(lparam) as u16),
             });
         },
         _ => (),
