@@ -27,15 +27,20 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         }
 
         if filename.starts_with("event") {
-            // TODO: Use Builder::new().spawn to prevent panic
-            thread::spawn(move || start_reader(format!("/dev/input/{}", filename), callback));
+            if let Err(err) = thread::Builder::new()
+                .name("SkyHook".into())
+                .spawn(move || start_reader(format!("/dev/input/{}", filename), callback))
+            {
+                return Err(Error {
+                    message: format!("Failed to spawn thread: {:?}", err),
+                });
+            }
         }
     }
 
     Ok(())
 }
 
-// TODO
 #[allow(dead_code)]
 pub fn stop() -> Result<(), Error> {
     let token = unsafe { &CANCELLATION_TOKEN };
@@ -47,8 +52,10 @@ pub fn stop() -> Result<(), Error> {
             CANCELLATION_TOKEN = None;
         }
 
-        return Ok();
+        return Ok(());
     }
 
-    Err(Error {message: String::from("Hook cannot be stopped before starting.")})
+    Err(Error {
+        message: String::from("Hook cannot be stopped before starting."),
+    })
 }
