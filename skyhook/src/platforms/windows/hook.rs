@@ -122,7 +122,7 @@ pub fn stop() -> Result<(), Error> {
 //#endregion
 
 // This is executed in another thread!
-extern "system" fn hook_callback(code: i32, w_param: usize, l_param: isize) -> isize {
+extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
     let processed_hook_id: HHOOK;
 
     unsafe {
@@ -131,25 +131,25 @@ extern "system" fn hook_callback(code: i32, w_param: usize, l_param: isize) -> i
 
     if code < 0 {
         // Don't do anything, just return
-        return processed_hook_id.CallNextHookEx(code.into(), w_param, l_param);
+        return processed_hook_id.CallNextHookEx(code.into(), wparam, lparam);
     }
 
-    match (w_param as u32).into() {
+    match (wparam as u32).into() {
         WM::KEYDOWN | WM::SYSKEYDOWN => unsafe {
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyPress(l_param as u16),
+                data: EventData::KeyPress(lparam as u16),
             });
         },
         WM::KEYUP | WM::SYSKEYUP => unsafe {
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyRelease(l_param as u16),
+                data: EventData::KeyRelease(lparam as u16),
             });
         },
         _ => (),
     }
 
     // ALWAYS call CallNextHookEx
-    return processed_hook_id.CallNextHookEx(code.into(), w_param, l_param);
+    return processed_hook_id.CallNextHookEx(code.into(), wparam, lparam);
 }
