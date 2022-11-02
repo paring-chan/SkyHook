@@ -123,11 +123,7 @@ pub fn stop() -> Result<(), Error> {
 
 // This is executed in another thread!
 extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
-    let processed_hook_id: HHOOK;
-
-    unsafe {
-        processed_hook_id = HOOK_ID.unwrap();
-    }
+    let processed_hook_id: HHOOK = unsafe { HOOK_ID.unwrap() };
 
     if code < 0 {
         // Don't do anything, just return
