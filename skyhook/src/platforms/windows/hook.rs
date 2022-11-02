@@ -124,13 +124,8 @@ pub fn stop() -> Result<(), Error> {
 // This is executed in another thread!
 
 #[derive(Clone, Copy)]
-#[allow(dead_code)]
 struct KBDLLHOOKSTRUCT {
     pub vk_code: u32,
-    pub scan_code: u32,
-    pub flags: u32,
-    pub time: u32,
-    pub dw_extra_info: u32,
 }
 
 unsafe fn get_code(lpdata: isize) -> u32 {
