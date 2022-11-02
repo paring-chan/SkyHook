@@ -1,5 +1,3 @@
-use std::{thread, time::Duration};
-
 use cancellation::CancellationTokenSource;
 
 use crate::types::Event;
@@ -26,8 +24,6 @@ pub fn stop() -> Result<(), crate::types::Error> {
 
         CANCELLATION_TOKEN = None;
     }
-
-    thread::sleep(Duration::from_secs(1));
 
     Ok(())
 }
