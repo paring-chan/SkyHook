@@ -4,16 +4,6 @@ use crate::types::{Event, EventData};
 
 use super::CANCELLATION_TOKEN;
 
-fn is_cancelled() -> bool {
-    let token = unsafe { &CANCELLATION_TOKEN };
-
-    if let Some(token) = token {
-        token.is_canceled()
-    } else {
-        true
-    }
-}
-
 fn convert_bit(bits: &[u8]) -> u16 {
     let mut result: u16 = 0;
     bits.iter().for_each(|&bit| {
@@ -24,11 +14,15 @@ fn convert_bit(bits: &[u8]) -> u16 {
 }
 
 pub fn start_reader(file_path: String, callback: fn(Event)) {
+    let token = match unsafe { &CANCELLATION_TOKEN } {
+        Some(token) => token,
+        None => return,
+    };
+
     let mut file = File::open(file_path).expect("Failed to open file");
 
     loop {
-        if is_cancelled() {
-            println!("Stop");
+        if token.is_canceled() {
             return;
         }
 
