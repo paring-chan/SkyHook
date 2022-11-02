@@ -1,7 +1,7 @@
 use std::{thread::Builder, time::SystemTime};
 
 use winsafe::{
-    co::{VK, WH, WM},
+    co::{WH, WM},
     msg::wm,
     prelude::kernel_Hthread,
     prelude::{user_Hhook, Handle},
