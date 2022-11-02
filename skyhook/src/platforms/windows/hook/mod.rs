@@ -9,6 +9,7 @@ use winsafe::{
 };
 
 mod keyboard;
+mod mouse;
 
 use crate::types::{Error, Event};
 
@@ -16,6 +17,7 @@ use super::{message::process_message, CANCELLATION_TOKEN};
 
 //#region Commons
 pub(crate) static mut KBD_HOOK_ID: Option<HHOOK> = None;
+pub(crate) static mut MOUSE_HOOK_ID: Option<HHOOK> = None;
 static mut THREAD_ID: Option<u32> = None;
 static mut CALLBACK: Option<fn(Event)> = None;
 
@@ -42,15 +44,26 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
     };
 
     let thread = Builder::new().spawn(|| {
-        let registered_hook = HHOOK::SetWindowsHookEx(
+        let registered_keyboard_hook = HHOOK::SetWindowsHookEx(
             WH::KEYBOARD_LL,
             keyboard::hook_callback,
             Some(HINSTANCE::NULL),
             Some(0),
         );
 
+        let registered_mouse_hook = HHOOK::SetWindowsHookEx(
+            WH::MOUSE_LL,
+            mouse::hook_callback,
+            Some(HINSTANCE::NULL),
+            Some(0),
+        );
+
         unsafe {
-            KBD_HOOK_ID = match registered_hook {
+            KBD_HOOK_ID = match registered_keyboard_hook {
+                Ok(h) => Some(h),
+                Err(err) => return Err(err),
+            };
+            MOUSE_HOOK_ID = match registered_mouse_hook {
                 Ok(h) => Some(h),
                 Err(err) => return Err(err),
             };
@@ -77,13 +90,28 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
 }
 
 pub fn stop() -> Result<(), Error> {
+    let mut exists = false;
+
     unsafe {
         if let Some(hook_id) = KBD_HOOK_ID {
+            exists = true;
             match HHOOK::UnhookWindowsHookEx(hook_id) {
                 Ok(_) => (),
                 Err(err) => {
                     return Err(Error {
-                        message: format!("Could not stop the hook. {:?}", err),
+                        message: format!("Could not stop the keyboard hook. {:?}", err),
+                    })
+                }
+            };
+        }
+
+        if let Some(hook_id) = MOUSE_HOOK_ID {
+            exists = true;
+            match HHOOK::UnhookWindowsHookEx(hook_id) {
+                Ok(_) => (),
+                Err(err) => {
+                    return Err(Error {
+                        message: format!("Could not stop the mouse hook. {:?}", err),
                     })
                 }
             };
@@ -96,12 +124,16 @@ pub fn stop() -> Result<(), Error> {
                 });
             }
 
-            return Ok(());
+            exists = true;
         }
     }
 
-    Err(Error {
-        message: "Hook cannot be stopped before starting.".into(),
-    })
+    if !exists {
+        Err(Error {
+            message: "Hook cannot be stopped before starting.".into(),
+        })
+    } else {
+        Ok(())
+    }
 }
 //#endregion
