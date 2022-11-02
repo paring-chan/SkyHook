@@ -65,23 +65,6 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
 
     while let None = unsafe { HOOK_ID } {}
 
-    // match thread {
-    //     Ok(processed_thread) => match processed_thread.join() {
-    //         Ok(result) => match result {
-    //             Err(err) => Err(Error {
-    //                 message: format!("Could not start the hook. {:?}", err),
-    //             }),
-    //             _ => Ok(()),
-    //         },
-    //         Err(err) => Err(Error {
-    //             message: format!("A panic occured in the thread. {:?}", err),
-    //         }),
-    //     },
-    //     Err(err) => Err(Error {
-    //         message: format!("Could not create a thread for the hook. {:?}", err),
-    //     }),
-    // }
-
     if let Err(e) = thread {
         return Err(Error {
             message: format!("Failed to start hook thread: {:?}", e),
