@@ -2,6 +2,7 @@ use types::{Error, Event};
 
 #[cfg(target_os = "linux")]
 extern crate cancellation;
+extern crate winsafe;
 
 mod platforms;
 pub mod types;
