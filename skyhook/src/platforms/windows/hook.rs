@@ -125,8 +125,6 @@ pub fn stop() -> Result<(), Error> {
 extern "system" fn hook_callback(code: i32, w_param: usize, l_param: isize) -> isize {
     let processed_hook_id: HHOOK;
 
-    println!("Code: {} w_param: {} l_param: {}", code, w_param, l_param);
-
     unsafe {
         processed_hook_id = HOOK_ID.unwrap();
     }
