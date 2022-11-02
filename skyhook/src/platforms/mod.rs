@@ -1,9 +1,9 @@
+use crate::types::{Error, Event};
+
 // ------- LINUX -------
 
 #[cfg(target_os = "linux")]
 pub mod linux;
-
-use crate::types::{Error, Event};
 
 #[cfg(target_os = "linux")]
 pub fn run(callback: fn(Event)) -> Result<(), Error> {
