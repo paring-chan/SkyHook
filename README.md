@@ -11,3 +11,5 @@ You should add `input` role for the user.
 ```sh
 sudo usermod -aG input $USER
 ```
+
+and re-login
