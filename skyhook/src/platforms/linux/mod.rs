@@ -16,7 +16,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
     for path in dir {
         let filename = path.expect("Failed to get dir entry").file_name();
         let filename = match filename.to_str() {
-            Some(v) => String::from(v),
+            Some(v) => v.into(),
             None => continue,
         };
 
@@ -56,6 +56,6 @@ pub fn stop() -> Result<(), Error> {
     }
 
     Err(Error {
-        message: String::from("Hook cannot be stopped before starting."),
+        message: "Hook cannot be stopped before starting.".into(),
     })
 }

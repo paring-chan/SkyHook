@@ -12,7 +12,9 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
     unsafe {
         // return if hook is already set
         if HOOK_ID.is_some() {
-            return Err(Error { message: "Hook cannot be started if the hook is already running.".to_string() });
+            return Err(Error {
+                message: "Hook cannot be started if the hook is already running.".into(),
+            });
         }
 
         // assign callback
