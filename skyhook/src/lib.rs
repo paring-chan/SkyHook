@@ -13,6 +13,6 @@ pub fn run(callback: fn(Event)) -> Result<(), Error> {
     platforms::run(callback)
 }
 
-pub fn stop() {
+pub fn stop() -> Result<(), Error> {
     platforms::stop()
 }

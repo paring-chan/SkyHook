@@ -27,6 +27,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         }
 
         if filename.starts_with("event") {
+            // TODO: Use Builder::new().spawn to prevent panic
             thread::spawn(move || start_reader(format!("/dev/input/{}", filename), callback));
         }
     }
@@ -36,7 +37,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
 
 // TODO
 #[allow(dead_code)]
-pub fn stop() {
+pub fn stop() -> Result<(), Error> {
     let token = unsafe { &CANCELLATION_TOKEN };
 
     if let Some(token) = token {
@@ -45,5 +46,9 @@ pub fn stop() {
         unsafe {
             CANCELLATION_TOKEN = None;
         }
+
+        return Ok();
     }
+
+    Err(Error {message: String::from("Hook cannot be stopped before starting.")})
 }

@@ -11,7 +11,7 @@ pub fn run(callback: fn(Event)) -> Result<(), Error> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn stop() {
+pub fn stop() -> Result<(), Error> {
     linux::stop()
 }
 
