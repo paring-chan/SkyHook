@@ -33,11 +33,14 @@ pub fn stop() -> Result<(), Error> {
 // ------- MACOS -------
 
 #[cfg(target_os = "macos")]
+pub mod macos;
+
+#[cfg(target_os = "macos")]
 pub fn run(callback: fn(Event)) -> Result<(), Error> {
-    Ok(())
+    macos::start(callback)
 }
 
 #[cfg(target_os = "macos")]
 pub fn stop() -> Result<(), Error> {
-    Ok(())
+    macos::stop()
 }
