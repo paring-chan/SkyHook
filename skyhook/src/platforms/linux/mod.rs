@@ -88,13 +88,10 @@ pub fn stop() -> Result<(), Error> {
 
         unsafe {
             CANCELLATION_TOKEN = None;
+            STARTED = false;
         }
 
         return Ok(());
-    }
-
-    unsafe {
-        STARTED = false;
     }
 
     Err(Error {
