@@ -12,7 +12,7 @@ pub struct Event {
     pub data: EventData,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Error {
     pub message: String,
 }
