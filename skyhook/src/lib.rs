@@ -6,9 +6,9 @@ extern crate cancellation;
 #[cfg(target_os = "windows")]
 extern crate winsafe;
 
+pub(crate) mod macros;
 mod platforms;
 pub mod types;
-pub mod macros;
 
 pub fn run(callback: fn(Event)) -> Result<(), Error> {
     platforms::run(callback)
