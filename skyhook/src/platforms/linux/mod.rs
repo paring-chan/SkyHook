@@ -93,7 +93,9 @@ pub fn stop() -> Result<(), Error> {
         return Ok(());
     }
 
-    while unsafe { STARTED } {}
+    unsafe {
+        STARTED = false;
+    }
 
     Err(Error {
         message: "Hook cannot be stopped before starting.".into(),
