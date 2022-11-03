@@ -15,7 +15,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
 
     for path in dir {
         let filename = path.expect("Failed to get dir entry").file_name();
-        let filename = match filename.to_str() {
+        let filename: String = match filename.to_str() {
             Some(v) => v.into(),
             None => continue,
         };
