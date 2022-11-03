@@ -29,3 +29,15 @@ pub fn run(callback: fn(Event)) -> Result<(), Error> {
 pub fn stop() -> Result<(), Error> {
     windows::stop()
 }
+
+// ------- MACOS -------
+
+#[cfg(target_os = "macos")]
+pub fn run(callback: fn(Event)) -> Result<(), Error> {
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub fn stop() -> Result<(), Error> {
+    Ok(())
+}
