@@ -2,7 +2,7 @@ use std::{fs::File, io::Read, time::SystemTime};
 
 use crate::types::{Error, Event, EventData};
 
-use super::{CANCELLATION_TOKEN, STARTED};
+use super::CANCELLATION_TOKEN;
 
 fn convert_bit(bits: &[u8]) -> u16 {
     let mut result: u16 = 0;
@@ -14,11 +14,6 @@ fn convert_bit(bits: &[u8]) -> u16 {
 }
 
 pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error> {
-    let token = match unsafe { &CANCELLATION_TOKEN } {
-        Some(token) => token,
-        None => return Ok(()),
-    };
-
     let mut file = match File::open(file_path) {
         Ok(file) => file,
         Err(e) => {
@@ -28,24 +23,24 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
         }
     };
 
-    unsafe {
-        STARTED = true;
-    }
-
     loop {
-        if token.is_canceled() {
-            unsafe {
-                STARTED = false;
-            }
-            return Ok(());
-        }
-
         let mut buffer = [0; 24];
 
         if let Err(err) = file.read(&mut buffer) {
             return Err(Error {
                 message: format!("Failed to read stream: {:?}", err),
             });
+        }
+
+        let token = match unsafe { &CANCELLATION_TOKEN } {
+            Some(token) => token,
+            None => {
+                return Ok(());
+            }
+        };
+
+        if token.is_canceled() {
+            return Ok(());
         }
 
         let event_type = convert_bit(&vec![buffer[16], buffer[17]]);

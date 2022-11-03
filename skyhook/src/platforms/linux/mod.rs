@@ -72,10 +72,8 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         });
     }
 
-    while !unsafe { STARTED } {
-        if let Some(err) = unsafe { &ERROR } {
-            return Err(err.clone());
-        }
+    unsafe {
+        STARTED = true;
     }
 
     Ok(())
