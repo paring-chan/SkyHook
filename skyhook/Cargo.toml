@@ -11,4 +11,6 @@ edition = "2021"
 
 [dependencies]
 cancellation = "0.1.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
 winsafe = { version = "0.0.11", features = ["user", "kernel"] }
