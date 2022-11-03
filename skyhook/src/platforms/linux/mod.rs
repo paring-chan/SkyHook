@@ -10,8 +10,32 @@ mod reader;
 
 pub static mut CANCELLATION_TOKEN: Option<Arc<CancellationTokenSource>> = None;
 
+pub static mut STARTED: bool = false;
+pub static mut ERROR: Option<Error> = None;
+
 pub fn start(callback: fn(Event)) -> Result<(), Error> {
-    let dir = fs::read_dir("/dev/input").expect("Failed to read /dev/input");
+    if unsafe { STARTED } {
+        return Err(Error {
+            message: "Hook is already started".into(),
+        });
+    }
+
+    let dir = match fs::read_dir("/dev/input") {
+        Ok(dir) => dir,
+        Err(err) => {
+            return Err(Error {
+                message: format!("Failed to read input dir: {:?}", err),
+            });
+        }
+    };
+
+    let mut exists = false;
+
+    let cts = CancellationTokenSource::new();
+
+    unsafe {
+        CANCELLATION_TOKEN = Some(Arc::new(cts));
+    }
 
     for path in dir {
         let filename = path.expect("Failed to get dir entry").file_name();
@@ -20,21 +44,37 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
             None => continue,
         };
 
-        let cts = CancellationTokenSource::new();
-
-        unsafe {
-            CANCELLATION_TOKEN = Some(Arc::new(cts));
-        }
-
         if filename.starts_with("event") {
+            exists = true;
             if let Err(err) = thread::Builder::new()
                 .name("SkyHook".into())
-                .spawn(move || start_reader(format!("/dev/input/{}", filename), callback))
+                .spawn(move || {
+                    if let Err(err) = start_reader(format!("/dev/input/{}", filename), callback) {
+                        println!("{:?}", err);
+                        unsafe {
+                            ERROR = Some(err);
+                        }
+
+                        if let Err(_) = stop() {}
+                    }
+                })
             {
                 return Err(Error {
                     message: format!("Failed to spawn thread: {:?}", err),
                 });
             }
+        }
+    }
+
+    if !exists {
+        return Err(Error {
+            message: "Cannot find any event stream".into(),
+        });
+    }
+
+    while !unsafe { STARTED } {
+        if let Some(err) = unsafe { &ERROR } {
+            return Err(err.clone());
         }
     }
 
@@ -54,6 +94,8 @@ pub fn stop() -> Result<(), Error> {
 
         return Ok(());
     }
+
+    while unsafe { STARTED } {}
 
     Err(Error {
         message: "Hook cannot be stopped before starting.".into(),
