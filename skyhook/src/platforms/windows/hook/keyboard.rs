@@ -1,8 +1,8 @@
-use std::time::SystemTime;
+use std::{time::SystemTime, collections::HashSet};
 
 use winsafe::{co::WM, prelude::user_Hhook, HHOOK};
 
-use crate::types::{Event, EventData};
+use crate::{types::{Event, EventData}, breakable_unsafe};
 
 use super::{CALLBACK, KBD_HOOK_ID};
 
@@ -17,29 +17,68 @@ unsafe fn get_code(lpdata: isize) -> u32 {
     kb.vk_code + 3 // 0~2 is for mouse
 }
 
+static mut PRESSED_KEYS: Option<HashSet<u16>> = None;
+
+unsafe fn add_key(key: u16) -> bool {
+    match PRESSED_KEYS.as_mut() {
+        None => {
+            let mut hs = HashSet::<u16>::new();
+
+            hs.insert(key);
+
+            PRESSED_KEYS = Some(hs);
+
+            return true;
+        }
+        Some(keys) => {
+            return keys.insert(key);
+        }
+    }
+}
+
+unsafe fn remove_key(key: u16) {
+    if let Some(keys) = PRESSED_KEYS.as_mut() {
+        keys.remove(&key);
+    }
+}
+
 pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
     let processed_hook_id: HHOOK = unsafe { KBD_HOOK_ID.expect("HOOK_ID is None") };
 
-    if code < 0 {
-        // Don't do anything, just return
-        return processed_hook_id.CallNextHookEx(code.into(), wparam, lparam);
-    }
+    breakable_unsafe!({
+        if code < 0 {
+            // Don't do anything, just return
+            break;
+        }
+        
+        match (wparam as u32).into() {
+            WM::KEYDOWN | WM::SYSKEYDOWN => {
+                let vkcode = get_code(lparam) as u16;
 
-    match (wparam as u32).into() {
-        WM::KEYDOWN | WM::SYSKEYDOWN => unsafe {
-            CALLBACK.unwrap()(Event {
-                time: SystemTime::now(),
-                data: EventData::KeyPress(get_code(lparam) as u16),
-            });
-        },
-        WM::KEYUP | WM::SYSKEYUP => unsafe {
-            CALLBACK.unwrap()(Event {
-                time: SystemTime::now(),
-                data: EventData::KeyRelease(get_code(lparam) as u16),
-            });
-        },
-        _ => (),
-    }
+                // Ignore already down keys
+                if !add_key(vkcode) {
+                    break;
+                }
+
+                CALLBACK.unwrap()(Event {
+                    time: SystemTime::now(),
+                    data: EventData::KeyPress(vkcode),
+                });
+            },
+            WM::KEYUP | WM::SYSKEYUP => {
+                let vkcode = get_code(lparam) as u16;
+
+                // Do not ignore lifted keys upon next down event
+                remove_key(vkcode);
+
+                CALLBACK.unwrap()(Event {
+                    time: SystemTime::now(),
+                    data: EventData::KeyRelease(vkcode),
+                });
+            },
+            _ => (),
+        }
+    });
 
     // ALWAYS call CallNextHookEx
     return processed_hook_id.CallNextHookEx(code.into(), wparam, lparam);
