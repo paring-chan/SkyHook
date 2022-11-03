@@ -1,11 +1,11 @@
 [package]
 name = "skyhook"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
-
-# [lib]
-# name = "inputhook"
-# crate-type = ["dylib"]
+license = "MIT"
+description = "Global keyboard hooking"
+readme = "README.md"
+repository = "https://git.pikokr.dev/SkyHook/SkyHook"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
