@@ -2,9 +2,9 @@
 #include <pthread.h>
 #include <stdio.h>
 
-uint16_t pressed_keys = 0;
+typedef void (*event_callback)(uint, bool);
 
-bool is_pressed(uint16_t key) { return pressed_keys & key; }
+event_callback current_callback;
 
 void process_flags_changed(CGEventRef event, uint *key, bool *down,
                            bool *exists) {
@@ -100,7 +100,9 @@ CGEventRef tap_callback(__attribute__((unused)) CGEventTapProxy proxy,
     return event;
   }
 
-  printf("%d %d\n", key, down);
+  if (current_callback != NULL) {
+    current_callback(key, down);
+  }
 
   return event;
 }
@@ -175,10 +177,12 @@ void *runHook(__attribute__((unused)) void *vargp) {
   return NULL;
 }
 
-char *start_macos_hook() {
+char *start_macos_hook(event_callback callback) {
   if (thread_id != NULL || started) {
     return "Hook is already started";
   }
+
+  current_callback = callback;
 
   pthread_create(&thread_id, NULL, runHook, NULL);
 
