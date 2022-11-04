@@ -7,5 +7,12 @@ fn main() {
 }
 
 fn run_macos() {
-    // TODO
+    println!("cargo:rustc-link-lib=framework=Cocoa");
+
+    cc::Build::new()
+        .file("src/platforms/macos/macos_native.c")
+        .flag("-ObjC")
+        .compile("skyhook_macos");
+
+    println!("cargo:rerun-if-changed=src/platforms/macos/macos_native.c");
 }
