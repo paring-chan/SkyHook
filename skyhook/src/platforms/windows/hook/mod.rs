@@ -1,4 +1,4 @@
-use std::thread::Builder;
+use std::thread::{self, Builder};
 
 use winsafe::{
     co::{ERROR, WH},
@@ -97,7 +97,7 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
                 message: format!("Unable to set hook: {:?}", err),
             });
         }
-        print!("");
+        thread::yield_now();
     }
 
     Ok(())
