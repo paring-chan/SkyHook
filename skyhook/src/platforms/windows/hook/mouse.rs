@@ -1,16 +1,28 @@
 use std::time::SystemTime;
 
-use winsafe::{co::WM, prelude::user_Hhook, HHOOK};
+use winsafe::{co::WM, prelude::user_Hhook, HHOOK, POINT};
 
 use crate::types::{Event, EventData};
 
 use super::{CALLBACK, MOUSE_HOOK_ID};
 
-fn get_code(ev: usize) -> u16 {
-    match (ev as u32).into() {
+#[derive(Clone, Copy)]
+#[allow(dead_code)]
+struct MSLLHOOKSTRUCT {
+    pub pt: POINT,
+    pub dummy: u16,
+    pub mouse_data: u16
+}
+
+unsafe fn get_code(ev: usize, lpdata: isize) -> u16 {
+    match (ev as u32).into() { 
         WM::LBUTTONDOWN | WM::LBUTTONUP => 0,
         WM::RBUTTONDOWN | WM::RBUTTONUP => 1,
         WM::MBUTTONDOWN | WM::MBUTTONUP => 2,
+        WM::XBUTTONDOWN | WM::XBUTTONUP => {
+            let ms = *(lpdata as *const MSLLHOOKSTRUCT); 
+            if ms.mouse_data == 1 { 3 } else { 4 } 
+        },
         _ => panic!("Unknown button"),
     }
 }
@@ -24,16 +36,16 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
     }
 
     match (wparam as u32).into() {
-        WM::LBUTTONDOWN | WM::RBUTTONDOWN | WM::MBUTTONDOWN => unsafe {
+        WM::LBUTTONDOWN | WM::RBUTTONDOWN | WM::MBUTTONDOWN | WM::XBUTTONDOWN => unsafe {
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyPress(get_code(wparam) as u16),
+                data: EventData::KeyPress(get_code(wparam, lparam) as u16),
             });
         },
-        WM::LBUTTONUP | WM::RBUTTONUP | WM::MBUTTONUP => unsafe {
+        WM::LBUTTONUP | WM::RBUTTONUP | WM::MBUTTONUP | WM::XBUTTONUP => unsafe {
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyRelease(get_code(wparam) as u16),
+                data: EventData::KeyRelease(get_code(wparam, lparam) as u16),
             });
         },
         _ => (),
