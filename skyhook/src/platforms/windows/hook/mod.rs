@@ -1,7 +1,7 @@
 use std::thread::Builder;
 
 use winsafe::{
-    co::WH,
+    co::{ERROR, WH},
     msg::wm,
     prelude::kernel_Hthread,
     prelude::{user_Hhook, Handle},
@@ -19,6 +19,7 @@ use super::{message::process_message, CANCELLATION_TOKEN};
 pub(crate) static mut KBD_HOOK_ID: Option<HHOOK> = None;
 pub(crate) static mut MOUSE_HOOK_ID: Option<HHOOK> = None;
 static mut THREAD_ID: Option<u32> = None;
+static mut LISTEN_ERROR: Option<ERROR> = None;
 static mut CALLBACK: Option<fn(Event)> = None;
 
 pub fn start(callback: fn(Event)) -> Result<(), Error> {
@@ -43,6 +44,8 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         }
     };
 
+    unsafe { LISTEN_ERROR = None }
+
     let thread = Builder::new().spawn(|| {
         let registered_keyboard_hook = HHOOK::SetWindowsHookEx(
             WH::KEYBOARD_LL,
@@ -61,11 +64,17 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         unsafe {
             KBD_HOOK_ID = match registered_keyboard_hook {
                 Ok(h) => Some(h),
-                Err(err) => return Err(err),
+                Err(err) => {
+                    LISTEN_ERROR = Some(err);
+                    return;
+                }
             };
             MOUSE_HOOK_ID = match registered_mouse_hook {
                 Ok(h) => Some(h),
-                Err(err) => return Err(err),
+                Err(err) => {
+                    LISTEN_ERROR = Some(err);
+                    return;
+                }
             };
 
             let thread_id = winsafe::HTHREAD::GetCurrentThreadId();
@@ -74,16 +83,21 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         }
 
         process_message(cancellation_token);
-
-        Ok(())
     });
-
-    while let None = unsafe { KBD_HOOK_ID } {}
 
     if let Err(e) = thread {
         return Err(Error {
             message: format!("Failed to start hook thread: {:?}", e),
         });
+    }
+
+    while unsafe { THREAD_ID.is_none() } {
+        if let Some(err) = unsafe { LISTEN_ERROR } {
+            return Err(Error {
+                message: format!("Unable to set hook: {:?}", err),
+            });
+        }
+        print!("");
     }
 
     Ok(())
