@@ -2,11 +2,64 @@
 #include <pthread.h>
 #include <stdio.h>
 
+uint16_t pressed_keys = 0;
+
+bool is_pressed(uint16_t key) { return pressed_keys & key; }
+
+void process_flags_changed(CGEventRef event, uint *key, bool *down,
+                           bool *exists) {
+  uint code = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
+  CGEventFlags mask = CGEventGetFlags(event);
+
+  *key = code;
+
+  switch (code) {
+  case 59: // left control
+    *exists = true;
+    if (mask & kCGEventFlagMaskControl) {
+      *down = true;
+    }
+    break;
+  case 62: // right control
+    *exists = true;
+    if (mask & kCGEventFlagMaskControl) {
+      *down = true;
+    }
+    break;
+  case 56: // left shift
+    *exists = true;
+    if (mask & kCGEventFlagMaskShift) {
+      *down = true;
+    }
+    break;
+  case 55: // command
+    *exists = true;
+    if (mask & kCGEventFlagMaskCommand) {
+      *down = true;
+    }
+    break;
+  case 60: // right shift
+    *exists = true;
+    if (mask & kCGEventFlagMaskShift) {
+      *down = true;
+    }
+    break;
+  case 255:
+  case 57:
+    return;
+  default:
+    printf("Unknown key: %d\n", code);
+    *exists = false;
+    return;
+  }
+}
+
 CGEventRef tap_callback(__attribute__((unused)) CGEventTapProxy proxy,
                         CGEventType type, CGEventRef event,
                         __attribute__((unused)) void *refcon) {
   uint key;
   bool down = false;
+  bool exists;
 
   switch (type) {
   case kCGEventLeftMouseDown:
@@ -37,6 +90,12 @@ CGEventRef tap_callback(__attribute__((unused)) CGEventTapProxy proxy,
   case kCGEventKeyUp:
     key = (uint)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode) + 3;
     break;
+  case kCGEventFlagsChanged:
+    process_flags_changed(event, &key, &down, &exists);
+    if (!exists) {
+      return event;
+    }
+    break;
   default:
     return event;
   }
@@ -50,7 +109,8 @@ CGEventMask eventMask =
     ((1 << kCGEventKeyDown) | (1 << kCGEventKeyUp) |
      (1 << kCGEventLeftMouseDown) | (1 << kCGEventLeftMouseUp) |
      (1 << kCGEventRightMouseDown) | (1 << kCGEventRightMouseUp) |
-     (1 << kCGEventOtherMouseDown) | (1 << kCGEventOtherMouseUp));
+     (1 << kCGEventOtherMouseDown) | (1 << kCGEventOtherMouseUp) |
+     (1 << kCGEventFlagsChanged));
 
 CFRunLoopRef loop;
 bool started;
