@@ -127,8 +127,9 @@ void *runHook(__attribute__((unused)) void *vargp) {
   CFMachPortRef eventTap;
   CFRunLoopSourceRef runLoopSource;
 
-  eventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0,
-                              eventMask, tap_callback, NULL);
+  eventTap =
+      CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap,
+                       kCGEventTapOptionDefault, eventMask, tap_callback, NULL);
 
   if (!eventTap) {
     error_content = "failed to create event tap";
@@ -142,7 +143,7 @@ void *runHook(__attribute__((unused)) void *vargp) {
 
   loop = CFRunLoopGetCurrent();
 
-  CFRunLoopAddSource(loop, runLoopSource, kCFRunLoopCommonModes);
+  CFRunLoopAddSource(loop, runLoopSource, kCFRunLoopDefaultMode);
 
   CGEventTapEnable(eventTap, true);
 
@@ -150,11 +151,26 @@ void *runHook(__attribute__((unused)) void *vargp) {
 
   CFRunLoopRun();
 
-  started = false;
+  if (CFRunLoopContainsSource(loop, runLoopSource, kCFRunLoopDefaultMode)) {
+    CFRunLoopRemoveSource(loop, runLoopSource, kCFRunLoopDefaultMode);
+  }
+
+  CGEventTapEnable(eventTap, false);
+
+  CFRelease(runLoopSource);
+
+  CFMachPortInvalidate(eventTap);
+  CFRelease(eventTap);
+
+  eventTap = NULL;
+
+  runLoopSource = NULL;
 
   thread_id = NULL;
 
   loop = NULL;
+
+  started = false;
 
   return NULL;
 }
