@@ -83,6 +83,10 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         }
 
         process_message(cancellation_token);
+
+        unsafe {
+            THREAD_ID = None;
+        }
     });
 
     if let Err(e) = thread {
@@ -107,6 +111,14 @@ pub fn stop() -> Result<(), Error> {
     let mut exists = false;
 
     unsafe {
+        if let Some(cancellation_token) = &CANCELLATION_TOKEN {
+            cancellation_token.cancel();
+        } else {
+            return Err(Error {
+                message: "Cancellation token not found".into(),
+            });
+        }
+
         if let Some(hook_id) = KBD_HOOK_ID {
             exists = true;
             match HHOOK::UnhookWindowsHookEx(hook_id) {
@@ -139,6 +151,10 @@ pub fn stop() -> Result<(), Error> {
             }
 
             exists = true;
+
+            while THREAD_ID.is_some() {
+                thread::yield_now();
+            }
         }
     }
 
