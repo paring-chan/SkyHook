@@ -2,7 +2,7 @@ use std::{fs::File, io::Read, time::SystemTime};
 
 use crate::types::{Error, Event, EventData};
 
-use super::CANCELLATION_TOKEN;
+use super::{ARC_READY_COUNT, CANCELLATION_TOKEN};
 
 fn convert_bit(bits: &[u8]) -> u16 {
     let mut result: u16 = 0;
@@ -22,6 +22,12 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
             });
         }
     };
+
+    unsafe {
+        if let Some(arc) = &ARC_READY_COUNT {
+            arc.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+    }
 
     loop {
         let mut buffer = [0; 24];

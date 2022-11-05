@@ -1,4 +1,8 @@
-use std::{fs, sync::Arc, thread};
+use std::{
+    fs,
+    sync::{atomic::AtomicUsize, Arc},
+    thread,
+};
 
 use cancellation::CancellationTokenSource;
 
@@ -12,6 +16,7 @@ pub static mut CANCELLATION_TOKEN: Option<Arc<CancellationTokenSource>> = None;
 
 pub static mut STARTED: bool = false;
 pub static mut ERROR: Option<Error> = None;
+pub static mut ARC_READY_COUNT: Option<Arc<AtomicUsize>> = None;
 
 pub fn start(callback: fn(Event)) -> Result<(), Error> {
     if unsafe { STARTED } {
@@ -35,7 +40,10 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
 
     unsafe {
         CANCELLATION_TOKEN = Some(Arc::new(cts));
+        ARC_READY_COUNT = Some(Arc::new(AtomicUsize::new(0)));
     }
+
+    let mut count = 0;
 
     for path in dir {
         let filename = path.expect("Failed to get dir entry").file_name();
@@ -50,7 +58,6 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
                 .name("SkyHook".into())
                 .spawn(move || {
                     if let Err(err) = start_reader(format!("/dev/input/{}", filename), callback) {
-                        println!("{:?}", err);
                         unsafe {
                             ERROR = Some(err);
                         }
@@ -63,6 +70,8 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
                     message: format!("Failed to spawn thread: {:?}", err),
                 });
             }
+
+            count += 1;
         }
     }
 
@@ -70,6 +79,23 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
         return Err(Error {
             message: "Cannot find any event stream".into(),
         });
+    }
+
+    while unsafe {
+        ERROR.is_none()
+            && !{
+                if let Some(arc) = &ARC_READY_COUNT {
+                    arc.load(std::sync::atomic::Ordering::Relaxed) < count
+                } else {
+                    false
+                }
+            }
+    } {
+        thread::yield_now();
+    }
+
+    if let Some(err) = unsafe { &ERROR } {
+        return Err(err.clone());
     }
 
     unsafe {
