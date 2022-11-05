@@ -129,6 +129,7 @@ pub fn stop() -> Result<(), Error> {
                     })
                 }
             };
+            KBD_HOOK_ID = None;
         }
 
         if let Some(hook_id) = MOUSE_HOOK_ID {
@@ -141,6 +142,7 @@ pub fn stop() -> Result<(), Error> {
                     })
                 }
             };
+            MOUSE_HOOK_ID = None;
         }
 
         if let Some(thread_id) = THREAD_ID {
