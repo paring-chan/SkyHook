@@ -1,9 +1,11 @@
 use std::time::SystemTime;
 
+use crate::keycodes::VK;
+
 #[derive(Debug)]
 pub enum EventData {
-    KeyPress(u16),
-    KeyRelease(u16),
+    KeyPress(VK),
+    KeyRelease(VK),
 }
 
 #[derive(Debug)]
