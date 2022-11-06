@@ -61,6 +61,7 @@ pub enum VK {
     L,
     Semicolon,
     Apastrophe,
+    Enter,
 
     // 5th Layer
     LShift,
