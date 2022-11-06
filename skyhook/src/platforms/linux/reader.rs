@@ -30,15 +30,6 @@ unsafe fn remove_key(key: u16) -> bool {
     false
 }
 
-fn convert_bit(bits: &[u8]) -> u16 {
-    let mut result: u16 = 0;
-    bits.iter().for_each(|&bit| {
-        result <<= 1;
-        result ^= bit as u16;
-    });
-    result
-}
-
 pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error> {
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -75,12 +66,16 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
             return Ok(());
         }
 
-        let event_type = convert_bit(&vec![buffer[16], buffer[17]]);
-        let code = convert_bit(&vec![buffer[18], buffer[19]]);
-        let value = convert_bit(&vec![buffer[20], buffer[21]]);
+        let event_type: [u8; 2] = [buffer[16], buffer[17]];
+        let code: [u8; 2] = [buffer[18], buffer[19]];
+        let value: [u8; 2] = [buffer[20], buffer[21]];
+
+        let event_type = u16::from_le_bytes(event_type);
+        let code = u16::from_le_bytes(code);
+        let value = u16::from_le_bytes(value);
 
         unsafe {
-            if event_type == 2 {
+            if event_type == 1 {
                 match value {
                     0 => {
                         if !remove_key(code) {
@@ -92,7 +87,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
                             data: EventData::KeyRelease(code),
                         });
                     }
-                    2 => {
+                    1 => {
                         if !add_key(code) {
                             continue;
                         }
