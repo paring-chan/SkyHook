@@ -1,8 +1,34 @@
-use std::{fs::File, io::Read, time::SystemTime};
+use std::{collections::HashSet, fs::File, io::Read, time::SystemTime};
 
 use crate::types::{Error, Event, EventData};
 
 use super::{ARC_READY_COUNT, CANCELLATION_TOKEN};
+
+static mut PRESSED_KEYS: Option<HashSet<u16>> = None;
+
+unsafe fn add_key(key: u16) -> bool {
+    match PRESSED_KEYS.as_mut() {
+        None => {
+            let mut hs = HashSet::<u16>::new();
+
+            hs.insert(key);
+
+            PRESSED_KEYS = Some(hs);
+
+            return true;
+        }
+        Some(keys) => {
+            return keys.insert(key);
+        }
+    }
+}
+
+unsafe fn remove_key(key: u16) -> bool {
+    if let Some(keys) = PRESSED_KEYS.as_mut() {
+        return keys.remove(&key);
+    }
+    false
+}
 
 fn convert_bit(bits: &[u8]) -> u16 {
     let mut result: u16 = 0;
@@ -53,18 +79,32 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
         let code = convert_bit(&vec![buffer[18], buffer[19]]);
         let value = convert_bit(&vec![buffer[20], buffer[21]]);
 
-        if event_type == 2 {
-            match value {
-                0 => callback(Event {
-                    time: SystemTime::now(),
-                    data: EventData::KeyRelease(code),
-                }),
-                2 => callback(Event {
-                    time: SystemTime::now(),
-                    data: EventData::KeyPress(code),
-                }),
-                _ => continue,
-            };
+        unsafe {
+            if event_type == 2 {
+                match value {
+                    0 => {
+                        if !remove_key(code) {
+                            continue;
+                        }
+
+                        callback(Event {
+                            time: SystemTime::now(),
+                            data: EventData::KeyRelease(code),
+                        });
+                    }
+                    2 => {
+                        if !add_key(code) {
+                            continue;
+                        }
+
+                        callback(Event {
+                            time: SystemTime::now(),
+                            data: EventData::KeyPress(code),
+                        });
+                    }
+                    _ => continue,
+                };
+            }
         }
     }
 }
