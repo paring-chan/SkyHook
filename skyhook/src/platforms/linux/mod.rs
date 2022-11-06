@@ -10,6 +10,7 @@ use crate::types::{Error, Event};
 
 use self::reader::start_reader;
 
+mod keycode;
 mod reader;
 
 pub static mut CANCELLATION_TOKEN: Option<Arc<CancellationTokenSource>> = None;

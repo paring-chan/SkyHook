@@ -2,7 +2,7 @@ use std::{collections::HashSet, fs::File, io::Read, time::SystemTime};
 
 use crate::types::{Error, Event, EventData};
 
-use super::{ARC_READY_COUNT, CANCELLATION_TOKEN};
+use super::{keycode::raw_keycode_to_vk, ARC_READY_COUNT, CANCELLATION_TOKEN};
 
 static mut PRESSED_KEYS: Option<HashSet<u16>> = None;
 
@@ -84,7 +84,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
 
                         callback(Event {
                             time: SystemTime::now(),
-                            data: EventData::KeyRelease(code),
+                            data: EventData::KeyRelease(raw_keycode_to_vk(code)),
                         });
                     }
                     1 => {
@@ -94,7 +94,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
 
                         callback(Event {
                             time: SystemTime::now(),
-                            data: EventData::KeyPress(code),
+                            data: EventData::KeyPress(raw_keycode_to_vk(code)),
                         });
                     }
                     _ => continue,
