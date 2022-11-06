@@ -29,7 +29,7 @@ pub fn raw_keycode_to_vk(code: u16) -> VK {
         25 => VK::P,
         26 => VK::LeftBrace,
         27 => VK::RightBrace,
-        28 => VK::KeypadEnter,
+        28 => VK::Enter,
         29 => VK::LControl,
         30 => VK::A,
         31 => VK::S,
@@ -89,7 +89,7 @@ pub fn raw_keycode_to_vk(code: u16) -> VK {
         87 => VK::F11,
         88 => VK::F12,
         // 89, 90, 91, 92, 93, 94, 95
-        97 => VK::KeypadEnter,
+        96 => VK::KeypadEnter,
         98 => VK::KeypadSlash,
         99 => VK::PrintScreen,
         100 => VK::RAlt,
@@ -104,7 +104,9 @@ pub fn raw_keycode_to_vk(code: u16) -> VK {
         109 => VK::PageDown,
         110 => VK::Insert,
         111 => VK::Delete,
-        // 112 ~ 182
+        // 112 ~ 118
+        119 => VK::PauseBreak,
+        // 120 ~ 182
         183 => VK::F13,
         184 => VK::F14,
         185 => VK::F15,
