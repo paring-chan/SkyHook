@@ -115,7 +115,7 @@ pub enum VK {
     Keypad8,
     Keypad9,
     Keypad0,
-    KeypadDelete,
+    KeypadDot,
     KeypadPlus,
     KeypadEnter,
 
