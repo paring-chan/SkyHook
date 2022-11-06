@@ -5,9 +5,8 @@ pub fn raw_keycode_to_vk(code: u16) -> VK {
         0 => VK::MouseLeft,
         1 => VK::MouseRight,
         2 => VK::MouseMiddle,
-        // TODO: TEST REQUIRED FOR TWO ITEMS BELOW
-        // => VK::MouseX1,
-        // => VK::MouseX2,
+        3 => VK::MouseX1,
+        4 => VK::MouseX2,
         11 => VK::Backspace,
         12 => VK::Tab,
         16 => VK::Enter,
