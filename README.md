@@ -12,7 +12,7 @@ You should add `input` role for the user.
 sudo usermod -aG input $USER
 ```
 
-and re-login
+and re-login.
 
 ## Credits
 
