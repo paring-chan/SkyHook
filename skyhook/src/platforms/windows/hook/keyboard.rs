@@ -1,8 +1,11 @@
-use std::{time::SystemTime, collections::HashSet};
+use std::{collections::HashSet, time::SystemTime};
 
 use winsafe::{co::WM, prelude::user_Hhook, HHOOK};
 
-use crate::{types::{Event, EventData}, breakable_unsafe};
+use crate::{
+    breakable_unsafe,
+    types::{Event, EventData},
+};
 
 use super::{CALLBACK, KBD_HOOK_ID};
 
@@ -36,10 +39,11 @@ unsafe fn add_key(key: u16) -> bool {
     }
 }
 
-unsafe fn remove_key(key: u16) {
+unsafe fn remove_key(key: u16) -> bool {
     if let Some(keys) = PRESSED_KEYS.as_mut() {
-        keys.remove(&key);
+        return keys.remove(&key);
     }
+    false
 }
 
 pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
@@ -50,7 +54,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
             // Don't do anything, just return
             break;
         }
-        
+
         match (wparam as u32).into() {
             WM::KEYDOWN | WM::SYSKEYDOWN => {
                 let vkcode = get_code(lparam) as u16;
@@ -64,18 +68,20 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
                     time: SystemTime::now(),
                     data: EventData::KeyPress(vkcode),
                 });
-            },
+            }
             WM::KEYUP | WM::SYSKEYUP => {
                 let vkcode = get_code(lparam) as u16;
 
                 // Do not ignore lifted keys upon next down event
-                remove_key(vkcode);
+                if !remove_key(vkcode) {
+                    break;
+                }
 
                 CALLBACK.unwrap()(Event {
                     time: SystemTime::now(),
                     data: EventData::KeyRelease(vkcode),
                 });
-            },
+            }
             _ => (),
         }
     });
