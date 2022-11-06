@@ -124,4 +124,6 @@ pub enum VK {
     MouseMiddle,
     MouseX1,
     MouseX2,
+
+    Other(u16),
 }
