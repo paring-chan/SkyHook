@@ -4,7 +4,7 @@ use winsafe::{co::WM, prelude::user_Hhook, HHOOK};
 
 use crate::{
     breakable_unsafe,
-    types::{Event, EventData},
+    types::{Event, EventData}, platforms::windows::hook::keycodes::raw_keycode_to_vk,
 };
 
 use super::{CALLBACK, KBD_HOOK_ID};
@@ -66,7 +66,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
 
                 CALLBACK.unwrap()(Event {
                     time: SystemTime::now(),
-                    data: EventData::KeyPress(vkcode),
+                    data: EventData::KeyPress(raw_keycode_to_vk(vkcode)),
                 });
             }
             WM::KEYUP | WM::SYSKEYUP => {
@@ -79,7 +79,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
 
                 CALLBACK.unwrap()(Event {
                     time: SystemTime::now(),
-                    data: EventData::KeyRelease(vkcode),
+                    data: EventData::KeyRelease(raw_keycode_to_vk(vkcode)),
                 });
             }
             _ => (),
