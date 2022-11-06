@@ -17,7 +17,7 @@ struct KBDLLHOOKSTRUCT {
 unsafe fn get_code(lpdata: isize) -> u32 {
     let kb = *(lpdata as *const KBDLLHOOKSTRUCT);
 
-    kb.vk_code + 3 // 0~2 is for mouse
+    kb.vk_code
 }
 
 static mut PRESSED_KEYS: Option<HashSet<u16>> = None;
