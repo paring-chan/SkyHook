@@ -60,7 +60,7 @@ pub enum VK {
     K,
     L,
     Semicolon,
-    Apastrophe,
+    Apostrophe,
     Enter,
 
     // 5th Layer
