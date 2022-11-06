@@ -120,6 +120,6 @@ pub fn raw_keycode_to_vk(code: u16) -> VK {
         220 => VK::BackSlash,
         221 => VK::RightBrace,
         222 => VK::Apostrophe,
-        _ => VK::Other(code),
+        _ => VK::Unknown,
     }
 }

@@ -66,7 +66,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
 
                 CALLBACK.unwrap()(Event {
                     time: SystemTime::now(),
-                    data: EventData::KeyPress(raw_keycode_to_vk(vkcode)),
+                    data: EventData::KeyPress(raw_keycode_to_vk(vkcode), vkcode),
                 });
             }
             WM::KEYUP | WM::SYSKEYUP => {
@@ -79,7 +79,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
 
                 CALLBACK.unwrap()(Event {
                     time: SystemTime::now(),
-                    data: EventData::KeyRelease(raw_keycode_to_vk(vkcode)),
+                    data: EventData::KeyRelease(raw_keycode_to_vk(vkcode), vkcode),
                 });
             }
             _ => (),

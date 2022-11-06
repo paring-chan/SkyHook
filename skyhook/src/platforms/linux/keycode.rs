@@ -123,6 +123,6 @@ pub fn raw_keycode_to_vk(code: u16) -> VK {
         274 => VK::MouseMiddle,
         275 => VK::MouseX1,
         276 => VK::MouseX2,
-        _ => VK::Other(code),
+        _ => VK::Unknown,
     }
 }

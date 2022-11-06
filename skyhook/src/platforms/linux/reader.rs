@@ -84,7 +84,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
 
                         callback(Event {
                             time: SystemTime::now(),
-                            data: EventData::KeyRelease(raw_keycode_to_vk(code)),
+                            data: EventData::KeyRelease(raw_keycode_to_vk(code), code),
                         });
                     }
                     1 => {
@@ -94,7 +94,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
 
                         callback(Event {
                             time: SystemTime::now(),
-                            data: EventData::KeyPress(raw_keycode_to_vk(code)),
+                            data: EventData::KeyPress(raw_keycode_to_vk(code), code),
                         });
                     }
                     _ => continue,

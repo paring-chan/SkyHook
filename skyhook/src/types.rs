@@ -4,8 +4,8 @@ use crate::keycodes::VK;
 
 #[derive(Debug)]
 pub enum EventData {
-    KeyPress(VK),
-    KeyRelease(VK),
+    KeyPress(VK, u16),
+    KeyRelease(VK, u16),
 }
 
 #[derive(Debug)]

@@ -37,15 +37,19 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
 
     match (wparam as u32).into() {
         WM::LBUTTONDOWN | WM::RBUTTONDOWN | WM::MBUTTONDOWN | WM::XBUTTONDOWN => unsafe {
+            let code = get_code(wparam, lparam) as u16;
+
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyPress(raw_keycode_to_vk(get_code(wparam, lparam) as u16)),
+                data: EventData::KeyPress(raw_keycode_to_vk(code), code),
             });
         },
         WM::LBUTTONUP | WM::RBUTTONUP | WM::MBUTTONUP | WM::XBUTTONUP => unsafe {
+            let code = get_code(wparam, lparam) as u16;
+
             CALLBACK.unwrap()(Event {
                 time: SystemTime::now(),
-                data: EventData::KeyRelease(raw_keycode_to_vk(get_code(wparam, lparam) as u16)),
+                data: EventData::KeyRelease(raw_keycode_to_vk(code), code),
             });
         },
         _ => (),

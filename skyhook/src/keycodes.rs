@@ -138,5 +138,6 @@ pub enum VK {
     MouseX1,
     MouseX2,
 
-    Other(u16),
+    // Uncategorized
+    Unknown,
 }
