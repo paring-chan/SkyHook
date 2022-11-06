@@ -4,7 +4,7 @@ use winsafe::{co::WM, prelude::user_Hhook, HHOOK};
 
 use crate::{
     breakable_unsafe,
-    types::{Event, EventData}, platforms::windows::hook::keycodes::raw_keycode_to_vk,
+    types::{Event, EventData}, platforms::windows::hook::keycode::raw_keycode_to_vk,
 };
 
 use super::{CALLBACK, KBD_HOOK_ID};

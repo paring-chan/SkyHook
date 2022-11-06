@@ -4,7 +4,7 @@ use winsafe::{co::WM, prelude::user_Hhook, HHOOK, POINT};
 
 use crate::types::{Event, EventData};
 
-use super::{CALLBACK, MOUSE_HOOK_ID, keycodes::raw_keycode_to_vk};
+use super::{CALLBACK, MOUSE_HOOK_ID, keycode::raw_keycode_to_vk};
 
 #[derive(Clone, Copy)]
 #[allow(dead_code)]

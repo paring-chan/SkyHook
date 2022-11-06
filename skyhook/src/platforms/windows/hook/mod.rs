@@ -10,7 +10,7 @@ use winsafe::{
 
 mod keyboard;
 mod mouse;
-mod keycodes;
+mod keycode;
 
 use crate::types::{Error, Event};
 
