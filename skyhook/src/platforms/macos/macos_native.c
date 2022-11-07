@@ -44,6 +44,12 @@ void process_flags_changed(CGEventRef event, uint *key, bool *down,
       *down = true;
     }
     break;
+  case 58:
+  case 61:
+    *exists = true;
+    if (mask & kCGEventFlagMaskAlternate) {
+      *down = true;
+    }
   case 255:
   case 57:
     return;
