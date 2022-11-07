@@ -6,6 +6,10 @@ use std::{
 
 use crate::types::{Error, Event};
 
+use self::keycode::raw_keycode_to_vk;
+
+mod keycode;
+
 extern "C" {
     fn start_macos_hook(callback: extern "C" fn(u16, bool)) -> *const c_char;
     fn stop_macos_hook() -> *const c_char;
@@ -52,8 +56,8 @@ extern "C" fn native_callback(key: u16, down: bool) {
             cb(Event {
                 time: SystemTime::now(),
                 data: match down {
-                    true => crate::types::EventData::KeyPress(key),
-                    false => crate::types::EventData::KeyRelease(key),
+                    true => crate::types::EventData::KeyPress(raw_keycode_to_vk(key), key),
+                    false => crate::types::EventData::KeyRelease(raw_keycode_to_vk(key), key),
                 },
             })
         }

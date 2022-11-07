@@ -63,32 +63,32 @@ CGEventRef tap_callback(__attribute__((unused)) CGEventTapProxy proxy,
 
   switch (type) {
   case kCGEventLeftMouseDown:
-    key = 0;
+    key = 0x100;
     down = true;
     break;
   case kCGEventLeftMouseUp:
-    key = 0;
+    key = 0x100;
     break;
   case kCGEventRightMouseDown:
-    key = 1;
+    key = 0x101;
     down = true;
     break;
   case kCGEventRightMouseUp:
-    key = 1;
+    key = 0x101;
     break;
   case kCGEventOtherMouseDown:
-    key = 2;
+    key = 0x102;
     down = true;
     break;
   case kCGEventOtherMouseUp:
-    key = 2;
+    key = 0x102;
     break;
   case kCGEventKeyDown:
     down = true;
-    key = (uint)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode) + 3;
+    key = (uint)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
     break;
   case kCGEventKeyUp:
-    key = (uint)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode) + 3;
+    key = (uint)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
     break;
   case kCGEventFlagsChanged:
     process_flags_changed(event, &key, &down, &exists);
