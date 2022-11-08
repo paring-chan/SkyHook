@@ -1,4 +1,5 @@
 #[derive(Debug)]
+#[repr(C)]
 pub enum VK {
     Escape,
 
