@@ -14,14 +14,17 @@ struct KBDLLHOOKSTRUCT {
     pub vk_code: u32,
 }
 
+// getting a vkcode requires a pointer
 unsafe fn get_code(lpdata: isize) -> u32 {
     let kb = *(lpdata as *const KBDLLHOOKSTRUCT);
 
     kb.vk_code
 }
 
+// static hashset
 static mut PRESSED_KEYS: Option<HashSet<u16>> = None;
 
+// add a key to hashset to filter consecutive key down events
 unsafe fn add_key(key: u16) -> bool {
     match PRESSED_KEYS.as_mut() {
         None => {
@@ -39,6 +42,7 @@ unsafe fn add_key(key: u16) -> bool {
     }
 }
 
+// remove a key in the hashset
 unsafe fn remove_key(key: u16) -> bool {
     if let Some(keys) = PRESSED_KEYS.as_mut() {
         return keys.remove(&key);
@@ -49,6 +53,8 @@ unsafe fn remove_key(key: u16) -> bool {
 pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
     let processed_hook_id: HHOOK = unsafe { KBD_HOOK_ID.expect("HOOK_ID is None") };
 
+    // we can use a break statement like a jump here to
+    // avoid putting multiple complex return statements
     breakable_unsafe!({
         if code < 0 {
             // Don't do anything, just return
