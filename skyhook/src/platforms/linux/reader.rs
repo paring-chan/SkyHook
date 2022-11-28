@@ -1,4 +1,6 @@
-use std::{collections::HashSet, fs::File, io::Read, time::SystemTime};
+use std::{collections::HashSet, fs::File, io::Read};
+
+use chrono::NaiveDateTime;
 
 use crate::types::{Error, Event, EventData};
 
@@ -66,6 +68,15 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
             return Ok(());
         }
 
+        let tv_sec: [u8; 8] = [
+            buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7],
+        ];
+
+        let tv_usec: [u8; 8] = [
+            buffer[8], buffer[9], buffer[10], buffer[11], buffer[12], buffer[13], buffer[14],
+            buffer[15],
+        ];
+
         let event_type: [u8; 2] = [buffer[16], buffer[17]];
         let code: [u8; 2] = [buffer[18], buffer[19]];
         let value: [u8; 2] = [buffer[20], buffer[21]];
@@ -73,6 +84,14 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
         let event_type = u16::from_le_bytes(event_type);
         let code = u16::from_le_bytes(code);
         let value = u16::from_le_bytes(value);
+
+        let tv_sec = i64::from_le_bytes(tv_sec);
+        let tv_usec = u64::from_le_bytes(tv_usec);
+
+        // let event_time = DateTime::from(Duration::new(tv_sec, tv_usec as u32));
+
+        let event_time = NaiveDateTime::from_timestamp_opt(tv_sec, tv_usec as u32)
+            .expect("Unable to get event time");
 
         unsafe {
             if event_type == 1 {
@@ -83,7 +102,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
                         }
 
                         callback(Event {
-                            time: SystemTime::now(),
+                            time: event_time,
                             data: EventData::KeyRelease(raw_keycode_to_vk(code), code),
                         });
                     }
@@ -93,7 +112,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
                         }
 
                         callback(Event {
-                            time: SystemTime::now(),
+                            time: event_time,
                             data: EventData::KeyPress(raw_keycode_to_vk(code), code),
                         });
                     }

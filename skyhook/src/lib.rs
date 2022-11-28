@@ -6,6 +6,8 @@ extern crate cancellation;
 #[cfg(target_os = "windows")]
 extern crate winsafe;
 
+extern crate chrono;
+
 pub mod keycodes;
 pub(crate) mod macros;
 mod platforms;

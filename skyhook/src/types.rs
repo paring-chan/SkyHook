@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use chrono::NaiveDateTime;
 
 use crate::keycodes::VK;
 
@@ -10,7 +10,7 @@ pub enum EventData {
 
 #[derive(Debug)]
 pub struct Event {
-    pub time: SystemTime,
+    pub time: NaiveDateTime,
     pub data: EventData,
 }
 
