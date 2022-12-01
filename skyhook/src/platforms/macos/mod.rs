@@ -4,6 +4,8 @@ use std::{
     time::SystemTime,
 };
 
+use chrono::{Local, NaiveDateTime};
+
 use crate::types::{Error, Event};
 
 use self::keycode::raw_keycode_to_vk;
@@ -54,7 +56,7 @@ extern "C" fn native_callback(key: u16, down: bool) {
 
         if let Some(cb) = CURRENT_CALLBACK {
             cb(Event {
-                time: SystemTime::now(),
+                time: Local::now().naive_local(),
                 data: match down {
                     true => crate::types::EventData::KeyPress(raw_keycode_to_vk(key), key),
                     false => crate::types::EventData::KeyRelease(raw_keycode_to_vk(key), key),
