@@ -1,5 +1,6 @@
-use std::{collections::HashSet, time::SystemTime};
+use std::{collections::HashSet};
 
+use chrono::Local;
 use winsafe::{co::WM, prelude::user_Hhook, HHOOK};
 
 use crate::{
@@ -71,7 +72,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
                 }
 
                 CALLBACK.unwrap()(Event {
-                    time: SystemTime::now(),
+                    time: Local::now().naive_local(),
                     data: EventData::KeyPress(raw_keycode_to_vk(vkcode), vkcode),
                 });
             }
@@ -84,7 +85,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
                 }
 
                 CALLBACK.unwrap()(Event {
-                    time: SystemTime::now(),
+                    time: Local::now().naive_local(),
                     data: EventData::KeyRelease(raw_keycode_to_vk(vkcode), vkcode),
                 });
             }

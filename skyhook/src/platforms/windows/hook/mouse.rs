@@ -1,5 +1,4 @@
-use std::time::SystemTime;
-
+use chrono::Local;
 use winsafe::{co::WM, prelude::user_Hhook, HHOOK, POINT};
 
 use crate::{types::{Event, EventData}, breakable_unsafe};
@@ -45,7 +44,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
                 let code = get_code(wparam, lparam) as u16;
     
                 CALLBACK.unwrap()(Event {
-                    time: SystemTime::now(),
+                    time: Local::now().naive_local(),
                     data: EventData::KeyPress(raw_keycode_to_vk(code), code),
                 });
             },
@@ -53,7 +52,7 @@ pub extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) ->
                 let code = get_code(wparam, lparam) as u16;
     
                 CALLBACK.unwrap()(Event {
-                    time: SystemTime::now(),
+                    time: Local::now().naive_local(),
                     data: EventData::KeyRelease(raw_keycode_to_vk(code), code),
                 });
             },
