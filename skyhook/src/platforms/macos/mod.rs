@@ -1,10 +1,9 @@
 use std::{
     collections::HashSet,
-    ffi::{c_char, CStr},
-    time::SystemTime,
+    ffi::{c_char, CStr}
 };
 
-use chrono::{Local, NaiveDateTime};
+use chrono::Local;
 
 use crate::types::{Error, Event};
 
