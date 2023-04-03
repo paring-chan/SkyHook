@@ -292,7 +292,7 @@ dependencies = [
 [[package]]
 name = "swift-rs"
 version = "1.0.3"
-source = "git+https://github.com/pikokr/swift-rs.git#ecb4a28e8c4ebb59199e058ee7ee8bd84bded092"
+source = "git+https://github.com/pikokr/swift-rs.git#3cc03e5cecde3a2abfed8f4e080b6e464d59c082"
 dependencies = [
  "base64",
  "serde",
