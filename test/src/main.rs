@@ -1,4 +1,4 @@
-use std::{thread};
+use std::{thread, time::Duration};
 
 extern crate skyhook;
 

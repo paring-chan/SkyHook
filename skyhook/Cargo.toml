@@ -20,4 +20,6 @@ winsafe = { version = "0.0.11", features = ["user", "kernel"] }
 
 [build-dependencies]
 cc = "1.0.74"
-swift-rs = { version = "1.0.3", features = ["build"] }
+swift-rs = { git = "https://github.com/pikokr/swift-rs.git", features = [
+    "build",
+] }
