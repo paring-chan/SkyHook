@@ -4,6 +4,7 @@ import Cocoa
 class MacOSHook {
     var callback: EventCallback
     let thread: MacOSHookThread
+    private var dummyCounter = 0
 
     init(callback: EventCallback) {
         self.callback = callback
@@ -16,7 +17,9 @@ class MacOSHook {
     func start() throws {
         thread.start()
 
-        while (!thread.started && thread.error == nil) {}
+        while (!thread.started && thread.error == nil) {
+            dummyCounter += 1
+        }
 
         if (thread.error != nil) {
             throw thread.error!
