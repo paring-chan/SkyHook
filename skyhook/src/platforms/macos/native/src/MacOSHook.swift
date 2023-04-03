@@ -31,6 +31,8 @@ class MacOSHook {
             CFRunLoopStop(self.thread.runLoop)
         }
 
-        while (self.thread.started) {}
+        while (self.thread.started) {
+            dummyCounter += 1
+        }
     }
 }
