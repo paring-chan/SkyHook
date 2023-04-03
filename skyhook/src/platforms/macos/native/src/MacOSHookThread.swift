@@ -24,6 +24,22 @@ class MacOSHookThread : Thread {
         }
     }
 
+    private var pressedCache = Set<UInt>()
+
+    private func flagsChanged(event: CGEvent, key: inout UInt, down: inout Bool) {
+        let code = (event.getIntegerValueField(CGEventField.keyboardEventKeycode) as NSNumber).uintValue
+
+        key = code
+
+        if (pressedCache.contains(code)) {
+            pressedCache.remove(code)
+            down = false
+        } else {
+            pressedCache.insert(code)
+            down = true
+        }
+    }
+
     private func startHook() throws -> Void {
         var eventMask = (1 << CGEventType.keyDown.rawValue)
         eventMask |= (1 << CGEventType.keyUp.rawValue)
@@ -72,7 +88,7 @@ class MacOSHookThread : Thread {
 
     func eventCallback(proxy: OpaquePointer, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
         var key: UInt = 0
-        var isDown: Bool
+        var isDown: Bool = false
 
         switch (type) {
             case .keyDown:
@@ -106,6 +122,9 @@ class MacOSHookThread : Thread {
             case .otherMouseUp:
                 key = 0x102
                 isDown = false
+                break
+            case .flagsChanged:
+                flagsChanged(event: event, key: &key, down: &isDown)
                 break
             default:
                 return Unmanaged.passRetained(event)
