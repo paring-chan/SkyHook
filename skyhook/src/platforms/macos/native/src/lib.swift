@@ -1,7 +1,7 @@
 import Cocoa
 
 public typealias EventCallback = @convention(c) (
-    uint, Bool
+    UInt, Bool
 ) -> Void
 
 var hook: MacOSHook? = nil

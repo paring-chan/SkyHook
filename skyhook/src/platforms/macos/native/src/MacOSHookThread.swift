@@ -71,7 +71,47 @@ class MacOSHookThread : Thread {
     }
 
     func eventCallback(proxy: OpaquePointer, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-        print("Wow")
+        var key: UInt = 0
+        var isDown: Bool
+
+        switch (type) {
+            case .keyDown:
+                key = (event.getIntegerValueField(CGEventField.keyboardEventKeycode) as NSNumber).uintValue
+                isDown = true
+                break
+            case .keyUp:
+                key = (event.getIntegerValueField(CGEventField.keyboardEventKeycode) as NSNumber).uintValue
+                isDown = false
+                break
+            case .leftMouseDown:
+                isDown = true
+                key = 0x100
+                break
+            case .leftMouseUp:
+                key = 0x100
+                isDown = false
+                break
+            case .rightMouseDown:
+                key = 0x101
+                isDown = true
+                break
+            case .rightMouseUp:
+                key = 0x101
+                isDown = false
+                break
+            case .otherMouseDown:
+                key = 0x102
+                isDown = true
+                break
+            case .otherMouseUp:
+                key = 0x102
+                isDown = false
+                break
+            default:
+                return Unmanaged.passRetained(event)
+        }
+
+        self.hook?.callback(key, isDown)
         
         return Unmanaged.passRetained(event)
     }

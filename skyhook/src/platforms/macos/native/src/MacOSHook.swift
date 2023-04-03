@@ -24,12 +24,10 @@ class MacOSHook {
     }
 
     func stop() {
-        if (self.thread != nil) {
-            if (self.thread.runLoop != nil) {
-                CFRunLoopStop(self.thread.runLoop)
-            }
-
-            while (self.thread.started) {}
+        if (self.thread.runLoop != nil) {
+            CFRunLoopStop(self.thread.runLoop)
         }
+
+        while (self.thread.started) {}
     }
 }
