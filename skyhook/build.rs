@@ -1,3 +1,5 @@
+use swift_rs::SwiftLinker;
+
 extern crate cc;
 
 fn main() {
@@ -7,12 +9,7 @@ fn main() {
 }
 
 fn run_macos() {
-    println!("cargo:rustc-link-lib=framework=Cocoa");
-
-    cc::Build::new()
-        .file("src/platforms/macos/macos_native.c")
-        .flag("-ObjC")
-        .compile("skyhook_macos");
-
-    println!("cargo:rerun-if-changed=src/platforms/macos/macos_native.c");
+    SwiftLinker::new("10.15")
+        .with_package("skyhook_mac", "src/platforms/macos/native")
+        .link();
 }
