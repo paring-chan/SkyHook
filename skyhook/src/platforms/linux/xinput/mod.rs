@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     ffi::{c_int, CString},
     ptr::null,
     thread,
@@ -119,8 +120,12 @@ fn run_recorder(callback: fn(Event)) -> Result<(), Error> {
             context: context,
         });
 
-        let result =
-            xrecord::XRecordEnableContextAsync(dpy_data, context, Some(record_callback), &mut 0);
+        let result = dbg!(xrecord::XRecordEnableContextAsync(
+            dpy_data,
+            context,
+            Some(record_callback),
+            &mut 0
+        ));
 
         if result == 0 {
             return Err(Error {
@@ -169,24 +174,29 @@ unsafe extern "C" fn record_callback(_: *mut i8, raw_data: *mut xrecord::XRecord
         match xdatum.xtype as i32 {
             xlib::KeyPress => {
                 let keysym = xlib::XKeycodeToKeysym(rec.dpy_control, xdatum.code, 0);
-                cb(Event {
-                    time: Local::now().naive_local(),
-                    data: crate::types::EventData::KeyPress(
-                        raw_xinput_keysym_to_vk(keysym),
-                        keysym as u16,
-                    ),
-                })
+
+                if add_key(xdatum.code) {
+                    cb(Event {
+                        time: Local::now().naive_local(),
+                        data: crate::types::EventData::KeyPress(
+                            raw_xinput_keysym_to_vk(keysym),
+                            keysym as u16,
+                        ),
+                    })
+                }
             }
             xlib::KeyRelease => {
                 let keysym = xlib::XKeycodeToKeysym(rec.dpy_control, xdatum.code, 0);
 
-                cb(Event {
-                    time: Local::now().naive_local(),
-                    data: crate::types::EventData::KeyRelease(
-                        raw_xinput_keysym_to_vk(keysym),
-                        keysym as u16,
-                    ),
-                })
+                if remove_key(xdatum.code) {
+                    cb(Event {
+                        time: Local::now().naive_local(),
+                        data: crate::types::EventData::KeyRelease(
+                            raw_xinput_keysym_to_vk(keysym),
+                            keysym as u16,
+                        ),
+                    })
+                }
             }
             xlib::ButtonPress => {
                 let key = get_mouse_key(xdatum.code);
@@ -220,6 +230,32 @@ fn get_mouse_key(code: u8) -> Option<VK> {
         3 => Some(VK::MouseRight),
         _ => None,
     }
+}
+
+static mut PRESSED_KEYS: Option<HashSet<u8>> = None;
+
+unsafe fn add_key(key: u8) -> bool {
+    match PRESSED_KEYS.as_mut() {
+        None => {
+            let mut hs = HashSet::<u8>::new();
+
+            hs.insert(key);
+
+            PRESSED_KEYS = Some(hs);
+
+            return true;
+        }
+        Some(keys) => {
+            return keys.insert(key);
+        }
+    }
+}
+
+unsafe fn remove_key(key: u8) -> bool {
+    if let Some(keys) = PRESSED_KEYS.as_mut() {
+        return keys.remove(&key);
+    }
+    false
 }
 
 #[repr(C)]
