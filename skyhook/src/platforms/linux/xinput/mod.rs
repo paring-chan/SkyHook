@@ -1,6 +1,6 @@
 use std::{
     collections::HashSet,
-    ffi::{c_int, CString},
+    ffi::{c_int, c_void, CString},
     ptr::null,
     thread,
 };
@@ -37,7 +37,6 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
                 message: "recorder is already running".into(),
             });
         }
-
         START_ERROR = None;
         STARTED = false;
 
@@ -145,8 +144,10 @@ fn run_recorder(callback: fn(Event)) -> Result<(), Error> {
 pub fn stop() -> Result<(), Error> {
     unsafe {
         if let Some(recorder) = &RECORDER {
-            xrecord::XRecordDisableContext(recorder.dpy_data, recorder.context);
+            xrecord::XRecordDisableContext(recorder.dpy_control, recorder.context);
             xrecord::XRecordFreeContext(recorder.dpy_control, recorder.context);
+            xlib::XFree(recorder.dpy_control as *mut c_void);
+            xlib::XFree(recorder.dpy_data as *mut c_void);
             xlib::XSynchronize(recorder.dpy_control, 0);
         }
         STARTED = false;
