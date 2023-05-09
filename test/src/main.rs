@@ -1,4 +1,4 @@
-use std::thread;
+use std::{thread, time::Duration};
 
 extern crate skyhook;
 
@@ -10,9 +10,9 @@ fn main() {
 
     println!("hook started!");
 
-    // thread::park_timeout(Duration::from_secs(5));
+    thread::park_timeout(Duration::from_secs(5));
 
-    thread::park();
+    // thread::park();
 
     skyhook::stop().expect("Failed to stop hook");
 }
