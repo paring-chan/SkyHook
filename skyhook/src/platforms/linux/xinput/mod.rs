@@ -120,12 +120,8 @@ fn run_recorder(callback: fn(Event)) -> Result<(), Error> {
             context: context,
         });
 
-        let result = dbg!(xrecord::XRecordEnableContextAsync(
-            dpy_data,
-            context,
-            Some(record_callback),
-            &mut 0
-        ));
+        let result =
+            xrecord::XRecordEnableContextAsync(dpy_data, context, Some(record_callback), &mut 0);
 
         if result == 0 {
             return Err(Error {
