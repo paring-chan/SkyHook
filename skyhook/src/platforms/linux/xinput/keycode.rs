@@ -60,7 +60,7 @@ pub fn raw_xinput_keysym_to_vk(keysym: u64) -> VK {
         XK_KP_Page_Down => VK::PageDown,
         XK_KP_End => VK::End,
         // XK_KP_Begin
-        // XK_KP_Insert
+        XK_KP_Insert => VK::Insert,
         XK_KP_Delete => VK::Delete,
         // XK_KP_Equal
         XK_KP_Multiply => VK::KeypadAsterisk,
