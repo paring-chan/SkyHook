@@ -1,10 +1,13 @@
 use std::{
+    ffi::CString,
     fs,
+    os::unix::prelude::PermissionsExt,
     sync::{atomic::AtomicUsize, Arc},
     thread,
 };
 
 use cancellation::CancellationTokenSource;
+use libc::{c_char, AT_EACCESS, AT_FDCWD, R_OK};
 
 use crate::types::{Error, Event};
 
@@ -55,6 +58,36 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
 
         if filename.starts_with("event") {
             exists = true;
+
+            let meta = match fs::metadata(format!("/dev/input/{}", filename)) {
+                Ok(v) => v,
+                Err(err) => {
+                    return Err(Error {
+                        message: format!("Unable to get permissions: {:?}", err),
+                    });
+                }
+            };
+
+            let c_path = CString::new(format!("/dev/input/{}", filename)).unwrap();
+
+            unsafe {
+                if libc::faccessat(
+                    AT_FDCWD,
+                    c_path.as_ptr() as *const c_char,
+                    0 | R_OK,
+                    AT_EACCESS,
+                ) != 0
+                {
+                    return Err(Error {
+                        message: format!("You have no permission to read /dev/input/{}", filename),
+                    });
+                }
+            }
+
+            let permissions = meta.permissions();
+
+            println!("{:?}", permissions.mode());
+
             if let Err(err) = thread::Builder::new()
                 .name("SkyHook".into())
                 .spawn(move || {
