@@ -10,14 +10,14 @@ static mut SELECTED_METHOD: LinuxHookMethod = LinuxHookMethod::Unset;
 
 pub fn start(callback: fn(Event)) -> Result<(), Error> {
     if let LinuxHookMethod::Unset = unsafe { &SELECTED_METHOD } {
-        if let Err(_) = xinput::start(callback) {
-            inputdev::start(callback)?;
+        if let Err(_) = inputdev::start(callback) {
+            xinput::start(callback)?;
             unsafe {
-                SELECTED_METHOD = LinuxHookMethod::InputDev;
+                SELECTED_METHOD = LinuxHookMethod::XInput;
             }
         } else {
             unsafe {
-                SELECTED_METHOD = LinuxHookMethod::XInput;
+                SELECTED_METHOD = LinuxHookMethod::InputDev;
             }
         }
 
