@@ -18,3 +18,4 @@ and re-login.
 
 - Windows API from [winsafe](https://github.com/rodrigocfd/winsafe)
 - Linux event reader from [StackOverFlow](https://stackoverflow.com/a/69745021)
+- XInput handler from [x11-rs](https://github.com/AltF02/x11-rs/blob/master/x11/examples/xrecord.rs)

@@ -4,15 +4,23 @@ use self::methods::LinuxHookMethod;
 
 mod inputdev;
 mod methods;
+mod xinput;
 
 static mut SELECTED_METHOD: LinuxHookMethod = LinuxHookMethod::Unset;
 
 pub fn start(callback: fn(Event)) -> Result<(), Error> {
     if let LinuxHookMethod::Unset = unsafe { &SELECTED_METHOD } {
-        inputdev::start(callback)?;
-        unsafe {
-            SELECTED_METHOD = LinuxHookMethod::InputDev;
+        if let Err(_) = xinput::start(callback) {
+            inputdev::start(callback)?;
+            unsafe {
+                SELECTED_METHOD = LinuxHookMethod::InputDev;
+            }
+        } else {
+            unsafe {
+                SELECTED_METHOD = LinuxHookMethod::XInput;
+            }
         }
+
         Ok(())
     } else {
         Err(Error {
@@ -26,6 +34,12 @@ pub fn stop() -> Result<(), Error> {
     match unsafe { &SELECTED_METHOD } {
         LinuxHookMethod::InputDev => {
             inputdev::stop()?;
+            unsafe {
+                SELECTED_METHOD = LinuxHookMethod::Unset;
+            }
+        }
+        LinuxHookMethod::XInput => {
+            xinput::stop()?;
             unsafe {
                 SELECTED_METHOD = LinuxHookMethod::Unset;
             }
