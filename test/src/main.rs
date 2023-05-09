@@ -8,6 +8,8 @@ fn main() {
     })
     .unwrap();
 
+    println!("hook started!");
+
     // thread::park_timeout(Duration::from_secs(5));
 
     thread::park();
