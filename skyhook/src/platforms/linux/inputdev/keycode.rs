@@ -1,6 +1,6 @@
 use crate::keycodes::VK;
 
-pub fn raw_keycode_to_vk(code: u16) -> VK {
+pub fn raw_inputdev_keycode_to_vk(code: u16) -> VK {
     match code {
         1 => VK::Escape,
         2 => VK::Alpha1,

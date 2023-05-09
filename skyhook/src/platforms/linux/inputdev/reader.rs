@@ -4,7 +4,7 @@ use chrono::NaiveDateTime;
 
 use crate::types::{Error, Event, EventData};
 
-use super::{keycode::raw_keycode_to_vk, ARC_READY_COUNT, CANCELLATION_TOKEN};
+use super::{keycode::raw_inputdev_keycode_to_vk, ARC_READY_COUNT, CANCELLATION_TOKEN};
 
 static mut PRESSED_KEYS: Option<HashSet<u16>> = None;
 
@@ -103,7 +103,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
 
                         callback(Event {
                             time: event_time,
-                            data: EventData::KeyRelease(raw_keycode_to_vk(code), code),
+                            data: EventData::KeyRelease(raw_inputdev_keycode_to_vk(code), code),
                         });
                     }
                     1 => {
@@ -113,7 +113,7 @@ pub fn start_reader(file_path: String, callback: fn(Event)) -> Result<(), Error>
 
                         callback(Event {
                             time: event_time,
-                            data: EventData::KeyPress(raw_keycode_to_vk(code), code),
+                            data: EventData::KeyPress(raw_inputdev_keycode_to_vk(code), code),
                         });
                     }
                     _ => continue,
