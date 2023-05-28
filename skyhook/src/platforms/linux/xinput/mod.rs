@@ -150,6 +150,7 @@ pub fn stop() -> Result<(), Error> {
             xlib::XFree(recorder.dpy_data as *mut c_void);
             xlib::XSynchronize(recorder.dpy_control, 0);
         }
+        RECORDER = None;
         STARTED = false;
     }
 
