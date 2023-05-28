@@ -15,6 +15,7 @@ pub fn stop() -> Result<(), Error> {
     linux::stop()
 }
 
+#[cfg(target_os = "linux")]
 pub fn is_running() -> bool {
     linux::is_running()
 }
@@ -34,6 +35,11 @@ pub fn stop() -> Result<(), Error> {
     windows::stop()
 }
 
+#[cfg(target_os = "windows")]
+pub fn is_running() -> bool {
+    false
+}
+
 // ------- MACOS -------
 
 #[cfg(target_os = "macos")]
@@ -47,4 +53,9 @@ pub fn run(callback: fn(Event)) -> Result<(), Error> {
 #[cfg(target_os = "macos")]
 pub fn stop() -> Result<(), Error> {
     macos::stop()
+}
+
+#[cfg(target_os = "macos")]
+pub fn is_running() -> bool {
+    false
 }
