@@ -27,3 +27,7 @@ pub fn stop() -> Result<(), crate::types::Error> {
 
     Ok(())
 }
+
+pub fn is_running() -> bool {
+    hook::is_running()
+}

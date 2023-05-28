@@ -37,7 +37,7 @@ pub fn stop() -> Result<(), Error> {
 
 #[cfg(target_os = "windows")]
 pub fn is_running() -> bool {
-    false
+    windows::is_running()
 }
 
 // ------- MACOS -------

@@ -9,8 +9,8 @@ use winsafe::{
 };
 
 mod keyboard;
-mod mouse;
 mod keycode;
+mod mouse;
 
 use crate::types::{Error, Event};
 
@@ -169,4 +169,15 @@ pub fn stop() -> Result<(), Error> {
         Ok(())
     }
 }
+
+pub fn is_running() -> bool {
+    unsafe {
+        if let Some(_) = &CANCELLATION_TOKEN {
+            true
+        } else {
+            false
+        }
+    }
+}
+
 //#endregion
