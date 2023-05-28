@@ -158,3 +158,7 @@ pub fn stop() -> Result<(), Error> {
         message: "Hook cannot be stopped before starting.".into(),
     })
 }
+
+pub fn is_running() -> bool {
+    unsafe { STARTED }
+}

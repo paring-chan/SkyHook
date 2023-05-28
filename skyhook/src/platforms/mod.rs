@@ -15,6 +15,10 @@ pub fn stop() -> Result<(), Error> {
     linux::stop()
 }
 
+pub fn is_running() -> bool {
+    linux::is_running()
+}
+
 // ------- WINDOWS -------
 
 #[cfg(target_os = "windows")]

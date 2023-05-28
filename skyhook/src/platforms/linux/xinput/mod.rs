@@ -156,6 +156,16 @@ pub fn stop() -> Result<(), Error> {
     Ok(())
 }
 
+pub fn is_running() -> bool {
+    unsafe {
+        if let Some(_) = &RECORDER {
+            true
+        } else {
+            false
+        }
+    }
+}
+
 unsafe extern "C" fn record_callback(_: *mut i8, raw_data: *mut xrecord::XRecordInterceptData) {
     let data = &*raw_data;
 

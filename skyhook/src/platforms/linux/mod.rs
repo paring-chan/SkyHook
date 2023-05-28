@@ -53,3 +53,11 @@ pub fn stop() -> Result<(), Error> {
 
     Ok(())
 }
+
+pub fn is_running() -> bool {
+    match unsafe { &SELECTED_METHOD } {
+        LinuxHookMethod::InputDev => inputdev::is_running(),
+        LinuxHookMethod::XInput => xinput::is_running(),
+        _ => false,
+    }
+}

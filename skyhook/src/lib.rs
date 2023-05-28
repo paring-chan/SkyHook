@@ -20,3 +20,7 @@ pub fn run(callback: fn(Event)) -> Result<(), Error> {
 pub fn stop() -> Result<(), Error> {
     platforms::stop()
 }
+
+pub fn is_running() -> bool {
+    platforms::is_running()
+}
