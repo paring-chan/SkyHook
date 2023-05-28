@@ -1,6 +1,6 @@
 use std::{
     collections::HashSet,
-    ffi::{c_char, CStr}
+    ffi::{c_char, CStr},
 };
 
 use chrono::Local;
@@ -14,6 +14,7 @@ mod keycode;
 extern "C" {
     fn start_macos_hook(callback: extern "C" fn(u16, bool)) -> *const c_char;
     fn stop_macos_hook() -> *const c_char;
+    fn macos_hook_running() -> bool;
 }
 
 static mut CURRENT_CALLBACK: Option<fn(Event)> = None;
@@ -99,4 +100,8 @@ pub fn stop() -> Result<(), Error> {
                 .into(),
         })
     }
+}
+
+pub fn is_running() -> bool {
+    unsafe { macos_hook_running() }
 }

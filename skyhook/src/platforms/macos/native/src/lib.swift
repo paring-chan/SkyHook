@@ -35,3 +35,9 @@ public func stopMacOSHook(callback: EventCallback) -> UnsafePointer<CChar>? {
 
     return nil
 }
+
+@_cdecl("macos_hook_running")
+public func macosHookRunning() -> Bool {
+    return hook != nil;
+}
+
