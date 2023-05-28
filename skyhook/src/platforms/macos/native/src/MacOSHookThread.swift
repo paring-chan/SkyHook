@@ -83,7 +83,7 @@ class MacOSHookThread : Thread {
 
         eventTap = nil
 
-        started = false
+        self.started = false
     }
 
     func eventCallback(proxy: OpaquePointer, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {

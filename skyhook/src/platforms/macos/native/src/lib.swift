@@ -40,4 +40,3 @@ public func stopMacOSHook(callback: EventCallback) -> UnsafePointer<CChar>? {
 public func macosHookRunning() -> Bool {
     return hook != nil;
 }
-
