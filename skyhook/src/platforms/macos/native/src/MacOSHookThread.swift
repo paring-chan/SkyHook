@@ -36,16 +36,6 @@ class MacOSHookThread : Thread {
     }
 
     private func startHook() throws -> Void {
-        var eventMask = (1 << CGEventType.keyDown.rawValue)
-        eventMask |= (1 << CGEventType.keyUp.rawValue)
-        eventMask |= (1 << CGEventType.leftMouseDown.rawValue)
-        eventMask |= (1 << CGEventType.leftMouseUp.rawValue)
-        eventMask |= (1 << CGEventType.rightMouseDown.rawValue)
-        eventMask |= (1 << CGEventType.rightMouseUp.rawValue)
-        eventMask |= (1 << CGEventType.otherMouseDown.rawValue)
-        eventMask |= (1 << CGEventType.otherMouseUp.rawValue)
-        eventMask |= (1 << CGEventType.flagsChanged.rawValue)
-
         let monitor = NSEvent.addLocalMonitorForEvents(matching: [
             NSEvent.EventTypeMask.leftMouseDown,
             NSEvent.EventTypeMask.leftMouseUp,
