@@ -1,10 +1,5 @@
 import Cocoa
 
-// TODO allow multi instance
-private func eventCallbackWrapper(proxy: OpaquePointer, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-    return hook?.thread.eventCallback(proxy: proxy, type: type, event: event, refcon: refcon)
-}
-
 class MacOSHookThread : Thread {
     var hook: MacOSHook? = nil
     var runLoopSource: CFRunLoopSource? = nil
@@ -50,88 +45,38 @@ class MacOSHookThread : Thread {
         eventMask |= (1 << CGEventType.otherMouseDown.rawValue)
         eventMask |= (1 << CGEventType.otherMouseUp.rawValue)
         eventMask |= (1 << CGEventType.flagsChanged.rawValue)
-                
 
-        var eventTap: CFMachPort? = CGEvent.tapCreate(
-                tap: CGEventTapLocation.cgSessionEventTap,
-                place: CGEventTapPlacement.headInsertEventTap,
-                options: CGEventTapOptions.defaultTap,
-                eventsOfInterest: CGEventMask(eventMask),
-                callback: eventCallbackWrapper,
-                userInfo: nil
-            )
-        
-        if (eventTap == nil) {
-            throw HookError.EventTapCreateFailed
+        let monitor = NSEvent.addLocalMonitorForEvents(matching: [
+            NSEvent.EventTypeMask.leftMouseDown,
+            NSEvent.EventTypeMask.leftMouseUp,
+            NSEvent.EventTypeMask.rightMouseDown,
+            NSEvent.EventTypeMask.rightMouseUp,
+            NSEvent.EventTypeMask.otherMouseDown,
+            NSEvent.EventTypeMask.otherMouseUp,
+            NSEvent.EventTypeMask.keyDown,
+            NSEvent.EventTypeMask.keyUp,
+        ], handler: eventCallback)
+
+        if (monitor == nil) {
+            throw HookError.MonitorCreateFailed
         }
-        
-        runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
 
         runLoop = CFRunLoopGetCurrent()
-
-        CFRunLoopAddSource(runLoop, runLoopSource, CFRunLoopMode.defaultMode)
-
-        CGEvent.tapEnable(tap: eventTap!, enable: true)
 
         self.started = true
 
         CFRunLoopRun()
 
+        NSEvent.removeMonitor(monitor!)
+
         runLoopSource = nil
-
-        CFMachPortInvalidate(eventTap!)
-
-        eventTap = nil
 
         self.started = false
     }
 
-    func eventCallback(proxy: OpaquePointer, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-        var key: UInt = 0
-        var isDown: Bool = false
+    func eventCallback(event: NSEvent) -> NSEvent {
+        print(event)
 
-        switch (type) {
-            case .keyDown:
-                key = (event.getIntegerValueField(CGEventField.keyboardEventKeycode) as NSNumber).uintValue
-                isDown = true
-                break
-            case .keyUp:
-                key = (event.getIntegerValueField(CGEventField.keyboardEventKeycode) as NSNumber).uintValue
-                isDown = false
-                break
-            case .leftMouseDown:
-                isDown = true
-                key = 0x100
-                break
-            case .leftMouseUp:
-                key = 0x100
-                isDown = false
-                break
-            case .rightMouseDown:
-                key = 0x101
-                isDown = true
-                break
-            case .rightMouseUp:
-                key = 0x101
-                isDown = false
-                break
-            case .otherMouseDown:
-                key = 0x102
-                isDown = true
-                break
-            case .otherMouseUp:
-                key = 0x102
-                isDown = false
-                break
-            case .flagsChanged:
-                flagsChanged(event: event, key: &key, down: &isDown)
-                break
-            default:
-                return Unmanaged.passRetained(event)
-        }
-
-        self.hook?.callback(key, isDown)
-        
-        return Unmanaged.passRetained(event)
+        return event
     }
 }

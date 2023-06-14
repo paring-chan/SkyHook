@@ -1,3 +1,3 @@
 enum HookError : Error {
-    case EventTapCreateFailed
+    case MonitorCreateFailed
 }
