@@ -1,0 +1,10 @@
+[package]
+name = "skyhook_test"
+version = "0.1.1"
+edition = "2021"
+
+license = "MIT"
+description = "test things of skyhook"
+
+[dependencies]
+skyhook = { path = "../skyhook" }

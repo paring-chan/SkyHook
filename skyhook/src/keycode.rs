@@ -1,6 +1,6 @@
 #[derive(Debug)]
 #[repr(C)]
-pub enum VK {
+pub enum KeyCode {
     Escape,
 
     // Function Keys
@@ -92,7 +92,8 @@ pub enum VK {
 
     // 6th Layer
     LControl,
-    Super,
+    LMeta,
+    RMeta,
     LAlt,
     Space,
     RAlt,
@@ -101,7 +102,7 @@ pub enum VK {
     // Controls
     PrintScreen,
     ScrollLock,
-    PauseBreak,
+    Pause,
     Insert,
     Home,
     PageUp,
@@ -115,22 +116,22 @@ pub enum VK {
 
     // Keypad
     NumLock,
-    KeypadSlash,
-    KeypadAsterisk,
-    KeypadMinus,
-    Keypad1,
-    Keypad2,
-    Keypad3,
-    Keypad4,
-    Keypad5,
-    Keypad6,
-    Keypad7,
-    Keypad8,
-    Keypad9,
-    Keypad0,
-    KeypadDot,
-    KeypadPlus,
-    KeypadEnter,
+    NumPad1,
+    NumPad2,
+    NumPad3,
+    NumPad4,
+    NumPad5,
+    NumPad6,
+    NumPad7,
+    NumPad8,
+    NumPad9,
+    NumPad0,
+    NumPadDivide,
+    NumPadMultiply,
+    NumPadSubtract,
+    NumPadDecimal,
+    NumPadAdd,
+    NumPadEnter,
 
     // Mouse
     MouseLeft,

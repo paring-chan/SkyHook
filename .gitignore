@@ -1,4 +1,2 @@
 /target
-
-# Ignore environment directories
-/.idea
+/Cargo.lock

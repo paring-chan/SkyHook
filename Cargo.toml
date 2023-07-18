@@ -1,2 +1,2 @@
 [workspace]
-members = ["skyhook", "test"]
+members = ["skyhook", "skyhook_test"]
