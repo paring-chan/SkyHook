@@ -37,6 +37,12 @@ pub extern "C" fn skyhook_new_hook() -> u16 {
 }
 
 #[no_mangle]
+pub extern "C" fn skyhook_drop_hook(id: u16) {
+    let hooks = get_hook_map();
+    hooks.remove(&id);
+}
+
+#[no_mangle]
 pub extern "C" fn skyhook_start_hook(id: u16) -> *const c_char {
     let result = start_hook(id);
 
