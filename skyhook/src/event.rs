@@ -1,7 +1,16 @@
+use std::time::Instant;
+
 use crate::KeyCode;
 
 #[derive(Debug)]
 pub enum Event {
-    KeyDown(KeyCode, i32),
-    KeyUp(KeyCode, i32),
+    KeyDown(EventData),
+    KeyUp(EventData),
+}
+
+#[derive(Debug)]
+pub struct EventData {
+    pub code: KeyCode,
+    pub key: i32,
+    pub time: Instant,
 }

@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Instant};
 
 use once_cell::sync::Lazy;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
@@ -42,7 +42,7 @@ impl Hook {
         }
     }
 
-    pub(crate) fn poll(&mut self) {
+    pub(crate) fn poll(&mut self, time: Instant) {
         unsafe {
             for i in 0x01..0xfe {
                 if IGNORED_KEYS.contains(&i) {
@@ -50,17 +50,25 @@ impl Hook {
                 }
 
                 let state = GetAsyncKeyState(i);
-                let cb = self.callback;
+                let cb = &self.callback;
 
                 if state < 0 {
                     if self.key_mask.insert(i) {
                         let (key, i) = get_keycode(i as u16);
-                        cb(Event::KeyDown(key, i));
+                        cb(Event::KeyDown(crate::event::EventData {
+                            code: key,
+                            key: i,
+                            time,
+                        }));
                     }
                 } else {
                     if self.key_mask.remove(&i) {
                         let (key, i) = get_keycode(i as u16);
-                        cb(Event::KeyUp(key, i));
+                        cb(Event::KeyUp(crate::event::EventData {
+                            code: key,
+                            key: i,
+                            time,
+                        }));
                     }
                 }
             }

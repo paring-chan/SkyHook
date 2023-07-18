@@ -1,0 +1,12 @@
+[package]
+name = "skyhook-unity-native"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.23"
+skyhook = { path = "../../skyhook" }
+
+[lib]
+name = "skyhook_unity"
+crate-type = ["cdylib"]

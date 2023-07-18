@@ -1,2 +1,2 @@
 [workspace]
-members = ["skyhook", "skyhook_test"]
+members = ["skyhook", "skyhook_test", "unity/native"]

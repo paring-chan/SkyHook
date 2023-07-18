@@ -1,6 +1,6 @@
 use std::{thread, time::Duration};
 
-use skyhook::Hook;
+use skyhook::{Event, Hook};
 
 static mut HOOK: Option<Hook> = None;
 
@@ -9,14 +9,16 @@ fn get_hook() -> &'static mut Hook {
         match HOOK {
             Some(ref mut hook) => hook,
             None => {
-                let hook = Hook::new(|ev| {
-                    dbg!(ev);
-                });
+                let hook = Hook::new(Box::new(callback));
                 HOOK = Some(hook);
                 HOOK.as_mut().unwrap()
             }
         }
     }
+}
+
+fn callback(ev: Event) {
+    dbg!(ev);
 }
 
 fn main() {

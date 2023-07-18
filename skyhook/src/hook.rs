@@ -2,25 +2,23 @@ use std::{collections::HashSet, thread, time::Instant};
 
 use crate::{debug, Event};
 
-#[derive(Debug)]
 pub struct Hook {
-    pub cancelled: bool,
     pub running: bool,
-    pub key_mask: HashSet<i32>,
+    pub cancelled: bool,
     pub polling_rate: usize,
-    pub(crate) callback: fn(Event),
-
+    pub key_mask: HashSet<i32>,
+    pub(crate) callback: Box<dyn Fn(Event) + Send + Sync>,
     pub(crate) error: Option<String>,
 }
 
 impl Hook {
-    pub fn new(callback: fn(Event)) -> Hook {
+    pub fn new(callback: Box<dyn Fn(Event) + Send + Sync>) -> Hook {
         let hook = Hook {
-            cancelled: false,
-            running: false,
             key_mask: HashSet::new(),
-            callback,
-            polling_rate: 60, // defaults by 250hz
+            running: false,
+            cancelled: false,
+            callback: callback,
+            polling_rate: 250, // defaults by 250hz
             error: None,
         };
 
@@ -44,7 +42,7 @@ impl Hook {
 
             let instant_at_frame_start = Instant::now();
 
-            self.poll();
+            self.poll(instant_at_frame_start);
 
             hertz::sleep_for_constant_rate(self.polling_rate, instant_at_frame_start);
         }
