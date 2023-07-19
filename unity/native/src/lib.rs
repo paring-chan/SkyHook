@@ -39,7 +39,12 @@ pub extern "C" fn skyhook_new_hook() -> u16 {
 #[no_mangle]
 pub extern "C" fn skyhook_drop_hook(id: u16) {
     let hooks = get_hook_map();
-    hooks.remove(&id);
+    let callbacks = get_native_callback_map();
+    if let Some(hook) = hooks.remove(&id) {
+        let mut hook = hook;
+        hook.stop_polling();
+    }
+    callbacks.remove(&id);
 }
 
 #[no_mangle]
