@@ -2,6 +2,10 @@ mod event;
 mod hook;
 mod keycode;
 mod macros;
+
+#[cfg(target_os = "linux")]
+mod linux;
+#[cfg(target_os = "windows")]
 mod windows;
 
 pub use event::Event;
