@@ -55,6 +55,27 @@ pub extern "C" fn skyhook_drop_hook(id: usize) {
     queues.remove(&id);
 }
 
+pub extern "C" fn skyhook_set_pollng_frequency(id: usize, frequency: usize) -> *const c_char {
+    let result = set_polling_frequency(id, frequency);
+
+    if let Err(err) = result {
+        let cstr = CString::new(err).unwrap();
+        return cstr.into_raw();
+    }
+
+    null()
+}
+
+pub extern "C" fn skyhook_get_polling_frequency(id: usize) -> usize {
+    let result = get_polling_frequency(id);
+
+    if let Err(_) = result {
+        return 0;
+    }
+
+    result.unwrap()
+}
+
 #[no_mangle]
 pub extern "C" fn skyhook_start_hook(id: usize) -> *const c_char {
     let result = start_hook(id);
@@ -105,6 +126,20 @@ fn start_hook(id: usize) -> Result<(), String> {
     let hook = get_hook(id)?;
 
     hook.wait_for_start()?;
+
+    Ok(())
+}
+
+fn get_polling_frequency(id: usize) -> Result<usize, String> {
+    let hook = get_hook(id)?;
+
+    Ok(hook.polling_rate.load(std::sync::atomic::Ordering::SeqCst))
+}
+
+fn set_polling_frequency(id: usize, frequency: usize) -> Result<(), String> {
+    let hook = get_hook(id)?;
+    hook.polling_rate
+        .store(frequency, std::sync::atomic::Ordering::SeqCst);
 
     Ok(())
 }
