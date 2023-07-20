@@ -6,7 +6,7 @@ use std::{
     thread,
 };
 
-use skyhook::{debug, Event, Hook, KeyCode};
+use skyhook::{Event, Hook, KeyCode};
 
 #[repr(C)]
 pub enum NativeEventType {
@@ -21,7 +21,6 @@ pub struct NativeEvent {
 }
 
 static mut HOOKS: Option<HashMap<u16, Hook>> = None;
-static mut NATIVE_CALLBACKS: Option<HashMap<u16, Option<extern "C" fn(NativeEvent)>>> = None;
 static ID_COUNTER: AtomicU16 = AtomicU16::new(0);
 
 #[no_mangle]
@@ -39,12 +38,10 @@ pub extern "C" fn skyhook_new_hook() -> u16 {
 #[no_mangle]
 pub extern "C" fn skyhook_drop_hook(id: u16) {
     let hooks = get_hook_map();
-    let callbacks = get_native_callback_map();
     if let Some(hook) = hooks.remove(&id) {
         let mut hook = hook;
         hook.stop_polling();
     }
-    callbacks.remove(&id);
 }
 
 #[no_mangle]
@@ -116,26 +113,8 @@ fn get_hook(id: u16) -> Result<&'static mut Hook, String> {
     }
 }
 
-fn get_native_callback_map() -> &'static mut HashMap<u16, Option<extern "C" fn(NativeEvent)>> {
-    unsafe {
-        match NATIVE_CALLBACKS {
-            Some(ref mut callbacks) => callbacks,
-            None => {
-                let callbacks = HashMap::new();
-                NATIVE_CALLBACKS = Some(callbacks);
-                NATIVE_CALLBACKS.as_mut().unwrap()
-            }
-        }
-    }
-}
-
 fn make_callback(id: u16) -> impl Fn(Event) {
     move |ev| {
-        debug!(ev);
-        let callback_map = get_native_callback_map();
-
-        if let Some(callback) = callback_map.get(&id) {
-            debug!(callback);
-        }
+        dbg!(ev);
     }
 }
