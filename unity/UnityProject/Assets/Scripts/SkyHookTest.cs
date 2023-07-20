@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace SkyHookTest
 {
@@ -9,6 +10,14 @@ namespace SkyHookTest
         private void Start()
         {
             hook.StartHook();
+        }
+
+        private void Update()
+        {
+            foreach (var ev in hook.ReadQueue())
+            {
+                Debug.Log(ev.Time);
+            }
         }
     }
 }

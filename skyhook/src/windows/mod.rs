@@ -1,4 +1,4 @@
-use std::{collections::HashSet, time::Instant};
+use std::{collections::HashSet, time::SystemTime};
 
 use once_cell::sync::Lazy;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
@@ -42,7 +42,7 @@ impl Hook {
         }
     }
 
-    pub(crate) fn poll(&mut self, time: Instant) {
+    pub(crate) fn poll(&mut self, time: SystemTime) {
         unsafe {
             for i in 0x01..0xfe {
                 if IGNORED_KEYS.contains(&i) {

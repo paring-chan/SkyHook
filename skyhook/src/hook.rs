@@ -5,7 +5,7 @@ use std::{
         Arc,
     },
     thread,
-    time::Instant,
+    time::{Instant, SystemTime},
 };
 
 use crate::{debug, Event};
@@ -49,8 +49,9 @@ impl Hook {
             }
 
             let instant_at_frame_start = Instant::now();
+            let time = SystemTime::now();
 
-            self.poll(instant_at_frame_start);
+            self.poll(time);
 
             hertz::sleep_for_constant_rate(
                 self.polling_rate.load(Ordering::SeqCst),

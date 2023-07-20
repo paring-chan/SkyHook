@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub enum KeyCode {
     Escape,

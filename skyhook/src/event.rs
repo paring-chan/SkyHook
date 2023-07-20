@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::time::SystemTime;
 
 use crate::KeyCode;
 
@@ -12,5 +12,5 @@ pub enum Event {
 pub struct EventData {
     pub code: KeyCode,
     pub key: i32,
-    pub time: Instant,
+    pub time: SystemTime,
 }
