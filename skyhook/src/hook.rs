@@ -2,7 +2,7 @@ use std::{
     collections::HashSet,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Arc, Mutex,
+        Arc,
     },
     thread,
     time::Instant,
