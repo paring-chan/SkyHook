@@ -19,7 +19,7 @@
 stages:          # List of stages for jobs, and their order of execution
   - build
 
-build-linux:       # This job runs in the build stage, which runs first.
+build-win-linux:
   stage: build
   image: rust:slim-bullseye
   tags:
