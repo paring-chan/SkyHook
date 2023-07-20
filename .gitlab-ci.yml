@@ -16,20 +16,16 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
-stages:          # List of stages for jobs, and their order of execution
+stages: # List of stages for jobs, and their order of execution
   - build
 
 build-win-linux:
   stage: build
-  image: rust:slim-bullseye
+  image: pikokr/skyhook-builder
   tags:
     - arm64
     - linux
   script:
-    - apt-get update && apt-get install -y build-essential gcc-x86-64-linux-gnu mingw-w64
-    - rustup target add x86_64-unknown-linux-gnu
-    - rustup target add x86_64-pc-windows-gnu
-    - rustup target add i686-pc-windows-gnu
     - RUSTFLAGS=-Clinker=/usr/bin/x86_64-linux-gnu-gcc cargo build -p skyhook-unity-native --target x86_64-unknown-linux-gnu --release
     - RUSTFLAGS=-Clinker=/usr/bin/x86_64-w64-mingw32-gcc cargo build -p skyhook-unity-native --target x86_64-pc-windows-gnu --release
     - RUSTFLAGS=-Clinker=/usr/bin/i686-w64-mingw32-gcc cargo build -p skyhook-unity-native --target i686-pc-windows-gnu --release
@@ -47,14 +43,13 @@ build-win-linux:
     when: on_success
     key: skyhook-unity-native
     paths:
-      - "target"
+      - 'target'
   artifacts:
     untracked: false
     when: on_success
     expire_in: 30 days
     paths:
       - 'Plugins/**/*'
-
 # unit-test-job:   # This job runs in the test stage.
 #   stage: test    # It only starts when the job in the build stage completes successfully.
 #   script:
