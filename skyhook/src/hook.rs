@@ -5,8 +5,10 @@ use std::{
         Arc,
     },
     thread,
-    time::{Instant, SystemTime},
+    time::Instant,
 };
+
+use chrono::Local;
 
 use crate::{debug, Event};
 
@@ -49,7 +51,7 @@ impl Hook {
             }
 
             let instant_at_frame_start = Instant::now();
-            let time = SystemTime::now();
+            let time = Local::now().naive_local();
 
             self.poll(time);
 

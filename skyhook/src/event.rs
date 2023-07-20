@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use chrono::NaiveDateTime;
 
 use crate::KeyCode;
 
@@ -12,5 +12,5 @@ pub enum Event {
 pub struct EventData {
     pub code: KeyCode,
     pub key: i32,
-    pub time: SystemTime,
+    pub time: NaiveDateTime,
 }

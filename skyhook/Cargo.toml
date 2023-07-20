@@ -7,6 +7,7 @@ license = "MIT"
 description = "A simple input library for games."
 
 [dependencies]
+chrono = "0.4.26"
 hertz = { git = "https://github.com/pikokr/hertz-rs" }
 once_cell = "1.18.0"
 windows = { version = "0.48.0", features = ["Win32_UI_Input_KeyboardAndMouse"] }

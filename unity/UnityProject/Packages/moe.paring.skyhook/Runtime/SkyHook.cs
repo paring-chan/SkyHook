@@ -7,8 +7,8 @@ namespace SkyHook
 {
     public class SkyHook : MonoBehaviour
     {
-        private static readonly long EpochTicks = new DateTime(1970,  1, 1).Ticks;
-        
+        private static readonly DateTime Epoch = new(1970, 1, 1);
+
         private uint _id;
 
         private void Awake()
@@ -28,15 +28,15 @@ namespace SkyHook
         public SkyHookEvent[] ReadQueue()
         {
             var result = new List<SkyHookEvent>();
-            SkyHookNative.ReadQueue(_id, @event =>
+            SkyHookNative.ReadQueue(_id, ev =>
             {
-                var time = new DateTime(EpochTicks + (long)(@event.TimeSec * 10000000L) + (long)(@event.TimeNSec / 100L));
-
+                var time = new DateTime(Epoch.Ticks + (ev.TimeSec * 1000000000 + (long)ev.TimeNSec) / 100);
+                
                 result.Add(new SkyHookEvent
                 {
-                    KeyCode = @event.KeyCode,
-                    EventType = @event.EventType,
-                    Key = @event.Key,
+                    KeyCode = ev.KeyCode,
+                    EventType = ev.EventType,
+                    Key = ev.Key,
                     Time = time
                 });
             });

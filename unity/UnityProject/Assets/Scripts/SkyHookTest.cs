@@ -16,7 +16,8 @@ namespace SkyHookTest
         {
             foreach (var ev in hook.ReadQueue())
             {
-                Debug.Log(ev.Time);
+                var now = DateTime.Now;
+                Debug.Log($"{ev.Time} {now}");
             }
         }
     }

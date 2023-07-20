@@ -1,5 +1,6 @@
-use std::{collections::HashSet, time::SystemTime};
+use std::collections::HashSet;
 
+use chrono::NaiveDateTime;
 use once_cell::sync::Lazy;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     GetAsyncKeyState, VIRTUAL_KEY, VK_CONTROL, VK_MENU, VK_SHIFT,
@@ -42,7 +43,7 @@ impl Hook {
         }
     }
 
-    pub(crate) fn poll(&mut self, time: SystemTime) {
+    pub(crate) fn poll(&mut self, time: NaiveDateTime) {
         unsafe {
             for i in 0x01..0xfe {
                 if IGNORED_KEYS.contains(&i) {

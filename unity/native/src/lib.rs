@@ -4,7 +4,6 @@ use std::{
     ptr::null,
     sync::atomic::AtomicUsize,
     thread,
-    time::UNIX_EPOCH,
 };
 
 use skyhook::{Event, Hook, KeyCode};
@@ -22,7 +21,7 @@ pub struct NativeEvent {
     pub code: KeyCode,
     pub event_type: NativeEventType,
     pub key: i32,
-    pub time_sec: u64,
+    pub time_sec: i64,
     pub time_nsec: u32,
 }
 
@@ -172,23 +171,23 @@ fn make_callback(id: usize) -> impl Fn(Event) {
 
         let native_event = match ev {
             Event::KeyDown(ev) => {
-                let duration = ev.time.duration_since(UNIX_EPOCH).unwrap();
+                let time = ev.time;
                 NativeEvent {
                     code: ev.code,
                     key: ev.key,
-                    time_nsec: duration.subsec_nanos(),
-                    time_sec: duration.as_secs(),
+                    time_nsec: time.timestamp_subsec_nanos(),
+                    time_sec: time.timestamp(),
                     event_type: NativeEventType::KeyPress,
                 }
             }
             Event::KeyUp(ev) => {
-                let duration = ev.time.duration_since(UNIX_EPOCH).unwrap();
+                let time = ev.time;
 
                 NativeEvent {
                     code: ev.code,
                     key: ev.key,
-                    time_nsec: duration.subsec_nanos(),
-                    time_sec: duration.as_secs(),
+                    time_nsec: time.timestamp_subsec_nanos(),
+                    time_sec: time.timestamp(),
                     event_type: NativeEventType::KeyRelease,
                 }
             }

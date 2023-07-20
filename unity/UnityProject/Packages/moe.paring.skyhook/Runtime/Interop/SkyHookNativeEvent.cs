@@ -8,7 +8,7 @@ namespace SkyHook.Interop
         public SkyHookKeyCode KeyCode;
         public SkyHookEventType EventType;
         public int Key;
-        public ulong TimeSec;
-        public ulong TimeNSec;
+        public long TimeSec;
+        public uint TimeNSec;
     }
 }
