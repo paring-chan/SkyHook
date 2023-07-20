@@ -10,6 +10,8 @@ fn get_hook() -> &'static mut Hook {
             Some(ref mut hook) => hook,
             None => {
                 let hook = Hook::new(Box::new(callback));
+                hook.polling_rate
+                    .store(500, std::sync::atomic::Ordering::SeqCst);
                 HOOK = Some(hook);
                 HOOK.as_mut().unwrap()
             }
