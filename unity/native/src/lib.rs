@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     ffi::{c_char, CString},
     ptr::null,
-    sync::atomic::AtomicU16,
+    sync::atomic::AtomicUsize,
     thread,
 };
 
@@ -20,11 +20,11 @@ pub struct NativeEvent {
     pub time_nsec: u64,
 }
 
-static mut HOOKS: Option<HashMap<u16, Hook>> = None;
-static ID_COUNTER: AtomicU16 = AtomicU16::new(0);
+static mut HOOKS: Option<HashMap<usize, Hook>> = None;
+static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[no_mangle]
-pub extern "C" fn skyhook_new_hook() -> u16 {
+pub extern "C" fn skyhook_new_hook() -> usize {
     let id = ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
 
     let hooks = get_hook_map();
@@ -36,7 +36,7 @@ pub extern "C" fn skyhook_new_hook() -> u16 {
 }
 
 #[no_mangle]
-pub extern "C" fn skyhook_drop_hook(id: u16) {
+pub extern "C" fn skyhook_drop_hook(id: usize) {
     let hooks = get_hook_map();
     if let Some(hook) = hooks.remove(&id) {
         let mut hook = hook;
@@ -45,7 +45,7 @@ pub extern "C" fn skyhook_drop_hook(id: u16) {
 }
 
 #[no_mangle]
-pub extern "C" fn skyhook_start_hook(id: u16) -> *const c_char {
+pub extern "C" fn skyhook_start_hook(id: usize) -> *const c_char {
     let result = start_hook(id);
 
     if let Err(err) = result {
@@ -57,7 +57,7 @@ pub extern "C" fn skyhook_start_hook(id: u16) -> *const c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn skyhook_stop_hook(id: u16) -> *const c_char {
+pub extern "C" fn skyhook_stop_hook(id: usize) -> *const c_char {
     let result = stop_hook(id);
 
     if let Err(err) = result {
@@ -68,7 +68,7 @@ pub extern "C" fn skyhook_stop_hook(id: u16) -> *const c_char {
     null()
 }
 
-fn start_hook(id: u16) -> Result<(), String> {
+fn start_hook(id: usize) -> Result<(), String> {
     let hook = get_hook(id)?;
 
     thread::spawn(move || {
@@ -82,7 +82,7 @@ fn start_hook(id: u16) -> Result<(), String> {
     Ok(())
 }
 
-fn stop_hook(id: u16) -> Result<(), String> {
+fn stop_hook(id: usize) -> Result<(), String> {
     let hook = get_hook(id)?;
 
     hook.stop_polling();
@@ -90,7 +90,7 @@ fn stop_hook(id: u16) -> Result<(), String> {
     Ok(())
 }
 
-fn get_hook_map() -> &'static mut HashMap<u16, Hook> {
+fn get_hook_map() -> &'static mut HashMap<usize, Hook> {
     unsafe {
         match HOOKS {
             Some(ref mut hooks) => hooks,
@@ -103,7 +103,7 @@ fn get_hook_map() -> &'static mut HashMap<u16, Hook> {
     }
 }
 
-fn get_hook(id: u16) -> Result<&'static mut Hook, String> {
+fn get_hook(id: usize) -> Result<&'static mut Hook, String> {
     let map = get_hook_map();
 
     if let Some(hook) = map.get_mut(&id) {
@@ -113,7 +113,7 @@ fn get_hook(id: u16) -> Result<&'static mut Hook, String> {
     }
 }
 
-fn make_callback(id: u16) -> impl Fn(Event) {
+fn make_callback(id: usize) -> impl Fn(Event) {
     move |ev| {
         dbg!(ev);
     }
