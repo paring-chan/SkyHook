@@ -29,17 +29,14 @@ build-win-linux:
     - RUSTFLAGS=-Clinker=/usr/bin/x86_64-linux-gnu-gcc cargo build -p skyhook-unity-native --target x86_64-unknown-linux-gnu --release
     - RUSTFLAGS=-Clinker=/usr/bin/x86_64-w64-mingw32-gcc cargo build -p skyhook-unity-native --target x86_64-pc-windows-gnu --release
     - RUSTFLAGS=-Clinker=/usr/bin/i686-w64-mingw32-gcc cargo build -p skyhook-unity-native --target i686-pc-windows-gnu --release
-    - mkdir Plugins
-    - mkdir Plugins/x64
-    - mkdir Plugins/i686
     - cp target/x86_64-unknown-linux-gnu/release/libskyhook_unity.so ${UNITY_PLUGIN_PATH}/Plugins/x64
     - cp target/x86_64-pc-windows-gnu/release/skyhook_unity.dll ${UNITY_PLUGIN_PATH}/Plugins/x64
     - cp target/i686-pc-windows-gnu/release/skyhook_unity.dll ${UNITY_PLUGIN_PATH}/Plugins/i686
     - git config --global user.email "${CI_EMAIL}"
     - git config --global user.name "${CI_USERNAME}"
-    - git add unity
+    - git add .
     - 'git commit -m "chore: update unity native plugin [skip ci]" || echo nothing to commit'
-    - git push
+    - git push origin $CI_COMMIT_REF_NAME
   variables:
     UNITY_PLUGIN_PATH: ${CI_PROJECT_DIR}/unity/UnityProject/Packages/moe.paring.skyhook
     CI_EMAIL: skyhook-ci@gitlab.paring.moe
