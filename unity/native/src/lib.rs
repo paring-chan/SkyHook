@@ -63,7 +63,7 @@ pub extern "C" fn skyhook_drop_hook(id: usize) {
 }
 
 #[no_mangle]
-pub extern "C" fn skyhook_set_pollng_frequency(id: usize, frequency: usize) -> *const c_char {
+pub extern "C" fn skyhook_set_polling_frequency(id: usize, frequency: usize) -> *const c_char {
     let result = set_polling_frequency(id, frequency);
 
     if let Err(err) = result {
