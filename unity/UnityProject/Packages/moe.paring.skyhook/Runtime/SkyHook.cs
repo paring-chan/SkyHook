@@ -30,7 +30,7 @@ namespace SkyHook
             var result = new List<SkyHookEvent>();
             SkyHookNative.ReadQueue(_id, ev =>
             {
-                var time = new DateTime(Epoch.Ticks + (ev.TimeSec * 1000000000 + (long)ev.TimeNSec) / 100);
+                var time = new DateTime(Epoch.Ticks + (ev.TimeSec * 1000000000 + ev.TimeNSec) / 100);
                 
                 result.Add(new SkyHookEvent
                 {
@@ -54,5 +54,15 @@ namespace SkyHook
             StopHook();
             SkyHookNative.DropHook(_id);
         }
+
+        #region Static
+
+        public static DateTime Now()
+        {
+            var time = SkyHookNative.GetTime();
+            return new DateTime(Epoch.Ticks + (time.TimeSec * 1000000000 + time.TimeNSec) / 100);
+        }
+
+        #endregion
     }
 }

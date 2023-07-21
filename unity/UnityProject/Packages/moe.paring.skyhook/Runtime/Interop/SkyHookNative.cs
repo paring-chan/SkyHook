@@ -22,5 +22,8 @@ namespace SkyHook.Interop
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "skyhook_read_queue")]
         public static extern void ReadQueue(uint id, ReadQueueCallback callback);
+        
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "skyhook_get_time")]
+        public static extern SkyHookNativeTime GetTime();
     }
 }
