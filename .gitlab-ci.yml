@@ -18,6 +18,10 @@
 
 stages: # List of stages for jobs, and their order of execution
   - build
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+      when: always
 
 build-win-linux:
   stage: build
