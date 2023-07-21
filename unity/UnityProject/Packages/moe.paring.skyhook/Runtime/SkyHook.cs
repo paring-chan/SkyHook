@@ -7,8 +7,6 @@ namespace SkyHook
 {
     public class SkyHook : MonoBehaviour
     {
-        private static readonly DateTime Epoch = new(1970, 1, 1);
-
         private uint _id;
 
         private void Awake()
@@ -30,7 +28,7 @@ namespace SkyHook
             var result = new List<SkyHookEvent>();
             SkyHookNative.ReadQueue(_id, ev =>
             {
-                var time = new DateTime(Epoch.Ticks + (ev.TimeSec * 1000000000 + ev.TimeNSec) / 100);
+                var time = ev.Time.GetDateTime();
                 
                 result.Add(new SkyHookEvent
                 {
@@ -60,7 +58,7 @@ namespace SkyHook
         public static DateTime Now()
         {
             var time = SkyHookNative.GetTime();
-            return new DateTime(Epoch.Ticks + (time.TimeSec * 1000000000 + time.TimeNSec) / 100);
+            return time.GetDateTime();
         }
 
         #endregion
