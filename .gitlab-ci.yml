@@ -42,6 +42,8 @@ build-win-linux:
     - git push
   variables:
     UNITY_PLUGIN_PATH: ${CI_PROJECT_DIR}/unity/UnityProject/Packages/moe.paring.skyhook
+    CI_EMAIL: skyhook-ci@gitlab.paring.moe
+    CI_USERNAME: SkyHook CI
 
   cache:
     policy: pull-push
