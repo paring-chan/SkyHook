@@ -74,6 +74,7 @@ pub extern "C" fn skyhook_set_pollng_frequency(id: usize, frequency: usize) -> *
     null()
 }
 
+#[no_mangle]
 pub extern "C" fn skyhook_get_polling_frequency(id: usize) -> usize {
     let result = get_polling_frequency(id);
 
