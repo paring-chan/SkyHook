@@ -39,7 +39,7 @@ build-win-linux:
     - git config --global user.email "${CI_EMAIL}"
     - git config --global user.name "${CI_USERNAME}"
     - git add .
-    - git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.paring.moe/SkyHook/SkyHook.git
+    - git remote set-url origin https://skyhook-ci:${SKYHOOK_CI_TOKEN}@gitlab.paring.moe/SkyHook/SkyHook.git
     - 'git commit -m "chore: update unity native plugin [skip ci]" || echo nothing to commit'
     - git push origin HEAD:$CI_COMMIT_REF_NAME
   variables:
