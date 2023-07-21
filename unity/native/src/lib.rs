@@ -125,6 +125,7 @@ pub extern "C" fn skyhook_read_queue(id: usize, cb: extern "C" fn(NativeEvent)) 
     queue.clear();
 }
 
+#[no_mangle]
 pub extern "C" fn skyhook_get_time() -> NativeTime {
     let now = Local::now().naive_local();
 
