@@ -6,6 +6,7 @@ use std::{
     thread,
 };
 
+use chrono::Local;
 use skyhook::{Event, Hook, KeyCode};
 
 #[repr(C)]
@@ -21,6 +22,13 @@ pub struct NativeEvent {
     pub code: KeyCode,
     pub event_type: NativeEventType,
     pub key: i32,
+    pub time_sec: i64,
+    pub time_nsec: u32,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct NativeTime {
     pub time_sec: i64,
     pub time_nsec: u32,
 }
@@ -114,6 +122,15 @@ pub extern "C" fn skyhook_read_queue(id: usize, cb: extern "C" fn(NativeEvent)) 
     }
 
     queue.clear();
+}
+
+pub extern "C" fn skyhook_get_time() -> NativeTime {
+    let now = Local::now().naive_local();
+
+    NativeTime {
+        time_sec: now.timestamp(),
+        time_nsec: now.timestamp_subsec_nanos(),
+    }
 }
 
 fn start_hook(id: usize) -> Result<(), String> {
