@@ -17,15 +17,19 @@ namespace SkyHookTest
 
         private void Update()
         {
-            if (Input.GetKey(KeyCode.Minus))
+            if (Input.GetKeyDown(KeyCode.Minus))
             {
-                hook.PollingFrequency -= 10;
+                if (hook.PollingFrequency < 10)
+                    hook.PollingFrequency = 1;
+                else
+                    hook.PollingFrequency -= 10;
             }
-            if (Input.GetKey(KeyCode.Equals))
+
+            if (Input.GetKeyDown(KeyCode.Equals))
             {
-                hook.PollingFrequency -= 0;
+                hook.PollingFrequency += 10;
             }
-            
+
             foreach (var ev in hook.ReadQueue())
             {
                 _lastEvent = ev;

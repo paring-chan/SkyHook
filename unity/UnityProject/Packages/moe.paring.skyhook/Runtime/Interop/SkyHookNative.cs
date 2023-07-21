@@ -30,6 +30,6 @@ namespace SkyHook.Interop
         public static extern ulong GetPollingFrequency(ulong id);
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "skyhook_set_polling_frequency")]
-        public static extern void SetPollingFrequency(ulong id, ulong value);
+        public static extern string SetPollingFrequency(ulong id, ulong value);
     }
 }

@@ -12,7 +12,11 @@ namespace SkyHook
         public ulong PollingFrequency
         {
             get => SkyHookNative.GetPollingFrequency(_id);
-            set => SkyHookNative.SetPollingFrequency(_id, value);
+            set
+            {
+                var result = SkyHookNative.SetPollingFrequency(_id, value);
+                if (!string.IsNullOrEmpty(result)) throw new SkyHookException(result);
+            }
         }
 
         private void Awake()
@@ -35,7 +39,7 @@ namespace SkyHook
             SkyHookNative.ReadQueue(_id, ev =>
             {
                 var time = ev.Time.GetDateTime();
-                
+
                 result.Add(new SkyHookEvent
                 {
                     KeyCode = ev.KeyCode,

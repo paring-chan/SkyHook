@@ -153,6 +153,10 @@ fn get_polling_frequency(id: usize) -> Result<usize, String> {
 }
 
 fn set_polling_frequency(id: usize, frequency: usize) -> Result<(), String> {
+    if frequency <= 1 {
+        return Err("frequency must be greater than 0".to_string());
+    }
+
     let hook = get_hook(id)?;
     hook.polling_rate
         .store(frequency, std::sync::atomic::Ordering::SeqCst);
