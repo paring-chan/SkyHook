@@ -3,7 +3,7 @@ use std::{
     ffi::{c_char, CString},
     ptr::null,
     sync::atomic::AtomicUsize,
-    thread,
+    thread::{self, JoinHandle, Thread},
 };
 
 use chrono::{Local, NaiveDateTime};
@@ -33,6 +33,7 @@ pub struct NativeTime {
 }
 
 static mut HOOKS: Option<HashMap<usize, Hook>> = None;
+static mut THREADS: Option<HashMap<usize, JoinHandle<()>>> = None;
 static mut HOOK_QUEUES: Option<HashMap<usize, Vec<NativeEvent>>> = None;
 static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
@@ -134,10 +135,17 @@ pub extern "C" fn skyhook_get_time() -> NativeTime {
 
 fn start_hook(id: usize) -> Result<(), String> {
     let hook = get_hook(id)?;
+    if hook.running.load(std::sync::atomic::Ordering::SeqCst) {
+        return Err("already running".to_string());
+    }
 
-    thread::spawn(move || {
+    let thread_map = get_threads_map();
+
+    let thread = thread::spawn(move || {
         hook.start_polling();
     });
+
+    thread_map.insert(id, thread);
 
     let hook = get_hook(id)?;
 
@@ -166,6 +174,10 @@ fn set_polling_frequency(id: usize, frequency: usize) -> Result<(), String> {
 
 fn stop_hook(id: usize) -> Result<(), String> {
     let hook = get_hook(id)?;
+    let threads_map = get_threads_map();
+    if let Some(handle) = threads_map.remove(&id) {
+        handle.thread().unpark();
+    }
 
     hook.stop_polling();
 
@@ -180,6 +192,19 @@ fn get_hook_map() -> &'static mut HashMap<usize, Hook> {
                 let hooks = HashMap::new();
                 HOOKS = Some(hooks);
                 HOOKS.as_mut().unwrap()
+            }
+        }
+    }
+}
+
+fn get_threads_map() -> &'static mut HashMap<usize, JoinHandle<()>> {
+    unsafe {
+        match THREADS {
+            Some(ref mut threads) => threads,
+            None => {
+                let threads = HashMap::new();
+                THREADS = Some(threads);
+                THREADS.as_mut().unwrap()
             }
         }
     }
