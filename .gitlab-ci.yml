@@ -40,7 +40,7 @@ build-win-linux:
     - git config --global user.name "${CI_USERNAME}"
     - git add .
     - 'git commit -m "chore: update unity native plugin [skip ci]" || echo nothing to commit'
-    - git push origin $CI_COMMIT_REF_NAME
+    - git push origin HEAD:$CI_COMMIT_REF_NAME
   variables:
     UNITY_PLUGIN_PATH: ${CI_PROJECT_DIR}/unity/UnityProject/Packages/moe.paring.skyhook
     CI_EMAIL: skyhook-ci@gitlab.paring.moe
