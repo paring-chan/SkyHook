@@ -19,15 +19,18 @@ namespace SkyHookTest
         {
             if (Input.GetKeyDown(KeyCode.Minus))
             {
-                if (hook.PollingFrequency < 10)
-                    hook.PollingFrequency = 1;
-                else
-                    hook.PollingFrequency -= 10;
+                hook.PollingFrequency -= 50;
             }
 
             if (Input.GetKeyDown(KeyCode.Equals))
             {
-                hook.PollingFrequency += 10;
+                hook.PollingFrequency += 50;
+            }
+
+            if (!Application.isFocused)
+            {
+                hook.ReadQueue();
+                return;
             }
 
             foreach (var ev in hook.ReadQueue())
