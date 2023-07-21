@@ -62,6 +62,7 @@ pub extern "C" fn skyhook_drop_hook(id: usize) {
     queues.remove(&id);
 }
 
+#[no_mangle]
 pub extern "C" fn skyhook_set_pollng_frequency(id: usize, frequency: usize) -> *const c_char {
     let result = set_polling_frequency(id, frequency);
 

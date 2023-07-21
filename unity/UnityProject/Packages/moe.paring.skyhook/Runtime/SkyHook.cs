@@ -7,7 +7,13 @@ namespace SkyHook
 {
     public class SkyHook : MonoBehaviour
     {
-        private uint _id;
+        private ulong _id;
+
+        public ulong PollingFrequency
+        {
+            get => SkyHookNative.GetPollingFrequency(_id);
+            set => SkyHookNative.SetPollingFrequency(_id, value);
+        }
 
         private void Awake()
         {
