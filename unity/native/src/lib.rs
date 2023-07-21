@@ -6,7 +6,7 @@ use std::{
     thread,
 };
 
-use chrono::Local;
+use chrono::{Local, NaiveDateTime};
 use skyhook::{Event, Hook, KeyCode};
 
 #[repr(C)]
@@ -22,12 +22,11 @@ pub struct NativeEvent {
     pub code: KeyCode,
     pub event_type: NativeEventType,
     pub key: i32,
-    pub time_sec: i64,
-    pub time_nsec: u32,
+    pub time: NativeTime,
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NativeTime {
     pub time_sec: i64,
     pub time_nsec: u32,
@@ -129,10 +128,7 @@ pub extern "C" fn skyhook_read_queue(id: usize, cb: extern "C" fn(NativeEvent)) 
 pub extern "C" fn skyhook_get_time() -> NativeTime {
     let now = Local::now().naive_local();
 
-    NativeTime {
-        time_sec: now.timestamp(),
-        time_nsec: now.timestamp_subsec_nanos(),
-    }
+    get_time(now)
 }
 
 fn start_hook(id: usize) -> Result<(), String> {
@@ -229,9 +225,8 @@ fn make_callback(id: usize) -> impl Fn(Event) {
                 NativeEvent {
                     code: ev.code,
                     key: ev.key,
-                    time_nsec: time.timestamp_subsec_nanos(),
-                    time_sec: time.timestamp(),
                     event_type: NativeEventType::KeyPress,
+                    time: get_time(time),
                 }
             }
             Event::KeyUp(ev) => {
@@ -240,13 +235,19 @@ fn make_callback(id: usize) -> impl Fn(Event) {
                 NativeEvent {
                     code: ev.code,
                     key: ev.key,
-                    time_nsec: time.timestamp_subsec_nanos(),
-                    time_sec: time.timestamp(),
                     event_type: NativeEventType::KeyRelease,
+                    time: get_time(time),
                 }
             }
         };
 
         queue.append(&mut vec![native_event]);
+    }
+}
+
+fn get_time(time: NaiveDateTime) -> NativeTime {
+    NativeTime {
+        time_sec: time.timestamp(),
+        time_nsec: time.timestamp_subsec_nanos(),
     }
 }
