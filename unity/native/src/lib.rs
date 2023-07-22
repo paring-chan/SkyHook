@@ -2,8 +2,7 @@ use std::{
     collections::HashMap,
     ffi::{c_char, CString},
     ptr::null,
-    sync::atomic::AtomicUsize,
-    thread::{self, JoinHandle, Thread},
+    thread::{self, JoinHandle},
 };
 
 use chrono::{Local, NaiveDateTime};
@@ -35,18 +34,18 @@ pub struct NativeTime {
 static mut HOOKS: Option<HashMap<usize, Hook>> = None;
 static mut THREADS: Option<HashMap<usize, JoinHandle<()>>> = None;
 static mut HOOK_QUEUES: Option<HashMap<usize, Vec<NativeEvent>>> = None;
-static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[no_mangle]
 pub extern "C" fn skyhook_new_hook() -> usize {
-    let id = ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-
     let hooks = get_hook_map();
     let queues = get_hook_queue_map();
-    let callback = Box::new(make_callback(id));
+    let callback = Box::new(callback);
+
+    let hook = Hook::new(callback);
+    let id = hook.id;
 
     queues.insert(id, Vec::new());
-    hooks.insert(id, Hook::new(callback));
+    hooks.insert(id, hook);
 
     id
 }
@@ -242,37 +241,35 @@ fn get_hook_queue(id: usize) -> Result<&'static mut Vec<NativeEvent>, String> {
     }
 }
 
-fn make_callback(id: usize) -> impl Fn(Event) {
-    move |ev| {
-        let queue = match get_hook_queue(id) {
-            Ok(v) => v,
-            Err(_) => return,
-        };
+fn callback(id: usize, ev: Event) {
+    let queue = match get_hook_queue(id) {
+        Ok(v) => v,
+        Err(_) => return,
+    };
 
-        let native_event = match ev {
-            Event::KeyDown(ev) => {
-                let time = ev.time;
-                NativeEvent {
-                    code: ev.code,
-                    key: ev.key,
-                    event_type: NativeEventType::KeyPress,
-                    time: get_time(time),
-                }
+    let native_event = match ev {
+        Event::KeyDown(ev) => {
+            let time = ev.time;
+            NativeEvent {
+                code: ev.code,
+                key: ev.key,
+                event_type: NativeEventType::KeyPress,
+                time: get_time(time),
             }
-            Event::KeyUp(ev) => {
-                let time = ev.time;
+        }
+        Event::KeyUp(ev) => {
+            let time = ev.time;
 
-                NativeEvent {
-                    code: ev.code,
-                    key: ev.key,
-                    event_type: NativeEventType::KeyRelease,
-                    time: get_time(time),
-                }
+            NativeEvent {
+                code: ev.code,
+                key: ev.key,
+                event_type: NativeEventType::KeyRelease,
+                time: get_time(time),
             }
-        };
+        }
+    };
 
-        queue.append(&mut vec![native_event]);
-    }
+    queue.append(&mut vec![native_event]);
 }
 
 fn get_time(time: NaiveDateTime) -> NativeTime {

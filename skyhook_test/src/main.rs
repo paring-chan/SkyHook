@@ -19,7 +19,7 @@ fn get_hook() -> &'static mut Hook {
     }
 }
 
-fn callback(ev: Event) {
+fn callback(_: usize, ev: Event) {
     dbg!(ev);
 }
 

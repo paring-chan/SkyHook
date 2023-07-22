@@ -25,7 +25,7 @@ static IGNORED_KEYS: Lazy<HashSet<i32>> = Lazy::new(|| {
 });
 
 impl Hook {
-    pub(crate) fn initialize(&mut self) {
+    pub(crate) fn initialize(&mut self) -> Result<(), String> {
         unsafe {
             for i in 0x01..0xfe {
                 if IGNORED_KEYS.contains(&i) {
@@ -41,6 +41,7 @@ impl Hook {
                 }
             }
         }
+        Ok(())
     }
 
     pub(crate) fn poll(&mut self, time: NaiveDateTime) {
@@ -56,20 +57,26 @@ impl Hook {
                 if state < 0 {
                     if self.key_mask.insert(i) {
                         let (key, i) = get_keycode(i as u16);
-                        cb(Event::KeyDown(crate::event::EventData {
-                            code: key,
-                            key: i,
-                            time,
-                        }));
+                        cb(
+                            self.id,
+                            Event::KeyDown(crate::event::EventData {
+                                code: key,
+                                key: i,
+                                time,
+                            }),
+                        );
                     }
                 } else {
                     if self.key_mask.remove(&i) {
                         let (key, i) = get_keycode(i as u16);
-                        cb(Event::KeyUp(crate::event::EventData {
-                            code: key,
-                            key: i,
-                            time,
-                        }));
+                        cb(
+                            self.id,
+                            Event::KeyUp(crate::event::EventData {
+                                code: key,
+                                key: i,
+                                time,
+                            }),
+                        );
                     }
                 }
             }

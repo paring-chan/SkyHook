@@ -12,18 +12,24 @@ use chrono::Local;
 
 use crate::{debug, Event};
 
+static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
 pub struct Hook {
+    pub id: usize,
     pub running: Arc<AtomicBool>,
     pub cancelled: Arc<AtomicBool>,
     pub polling_rate: Arc<AtomicUsize>,
     pub key_mask: HashSet<i32>,
-    pub(crate) callback: Box<dyn Fn(Event) + Send + Sync>,
+    pub(crate) callback: Box<dyn Fn(usize, Event) + Send + Sync>,
     pub(crate) error: Option<String>,
 }
 
 impl Hook {
-    pub fn new(callback: Box<dyn Fn(Event) + Send + Sync>) -> Hook {
+    pub fn new(callback: Box<dyn Fn(usize, Event) + Send + Sync>) -> Hook {
+        let id = ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+
         let hook = Hook {
+            id,
             key_mask: HashSet::new(),
             running: Arc::new(AtomicBool::new(false)),
             cancelled: Arc::new(AtomicBool::new(false)),
@@ -41,9 +47,12 @@ impl Hook {
             return;
         }
 
-        debug!(self.running.store(true, Ordering::SeqCst));
+        if let Err(message) = self.initialize() {
+            self.error = Some(message);
+            return;
+        }
 
-        self.initialize();
+        debug!(self.running.store(true, Ordering::SeqCst));
 
         loop {
             if self.cancelled.load(Ordering::SeqCst) {
@@ -60,6 +69,9 @@ impl Hook {
                 instant_at_frame_start,
             );
         }
+
+        #[cfg(target_os = "linux")]
+        self.finalize();
 
         self.running.store(false, Ordering::SeqCst);
         self.cancelled.store(false, Ordering::SeqCst);
