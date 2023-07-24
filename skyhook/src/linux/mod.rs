@@ -14,7 +14,7 @@ use x11::{
     },
 };
 
-use crate::{Event, Hook, KeyCode};
+use crate::{event::EventData, Event, Hook, KeyCode};
 
 mod keycode;
 
@@ -165,7 +165,7 @@ impl Hook {
                         if self.key_mask.insert(*code) {
                             cb(
                                 self.id,
-                                Event::KeyDown(crate::event::EventData {
+                                Event::KeyDown(EventData {
                                     code: key.clone(),
                                     key: *code,
                                     time,
@@ -177,7 +177,7 @@ impl Hook {
                         if self.key_mask.remove(&code) {
                             cb(
                                 self.id,
-                                Event::KeyUp(crate::event::EventData {
+                                Event::KeyUp(EventData {
                                     code: key.clone(),
                                     key: *code,
                                     time,
