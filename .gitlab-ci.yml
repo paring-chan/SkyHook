@@ -25,7 +25,7 @@ workflow:
 
 build-win:
   stage: build
-  image: pikokr/skyhook-builder:cross-win
+  image: pikokr/skyhook-builder
   tags:
     - arm64
     - linux
@@ -57,7 +57,7 @@ build-win:
 
 build-linux:
   stage: build
-  image: pikokr/skyhook-builder:linux
+  image: pikokr/skyhook-builder
   tags:
     - amd64
     - linux

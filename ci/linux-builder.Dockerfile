@@ -5,9 +5,10 @@ RUN apt-get update && apt-get upgrade -y && \
     build-essential \
     gcc \
     mingw-w64 \
-    gcc-multilib \
     git \
     pkg-config \
     libx11-dev \
     libxtst-dev && \
-    rustup target add x86_64-unknown-linux-gnu
+    rustup target add x86_64-unknown-linux-gnu && \
+    rustup target add x86_64-pc-windows-gnu && \
+    rustup target add i686-pc-windows-gnu
