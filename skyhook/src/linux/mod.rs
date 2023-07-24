@@ -165,7 +165,7 @@ impl Hook {
                         if self.key_mask.insert(*code) {
                             cb(
                                 self.id,
-                                Event::KeyUp(crate::event::EventData {
+                                Event::KeyDown(crate::event::EventData {
                                     code: key.clone(),
                                     key: *code,
                                     time,
@@ -177,7 +177,7 @@ impl Hook {
                         if self.key_mask.remove(&code) {
                             cb(
                                 self.id,
-                                Event::KeyDown(crate::event::EventData {
+                                Event::KeyUp(crate::event::EventData {
                                     code: key.clone(),
                                     key: *code,
                                     time,
