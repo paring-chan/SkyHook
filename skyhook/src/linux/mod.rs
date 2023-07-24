@@ -1,15 +1,13 @@
 use std::{
-    collections::{HashMap, HashSet},
-    ffi::{c_char, c_ulong, c_void, CString},
+    collections::HashMap,
+    ffi::{c_char, CString},
     ptr::null,
     vec,
 };
 
 use chrono::NaiveDateTime;
 use x11::{
-    xlib::{
-        self, Display, XCloseDisplay, XExtCodes, XFree, XInitExtension, XOpenDisplay, XSynchronize,
-    },
+    xlib::{self, Display, XCloseDisplay, XExtCodes, XInitExtension, XOpenDisplay, XSynchronize},
     xrecord::{
         XRecordAllClients, XRecordAllocRange, XRecordCreateContext, XRecordEnableContextAsync,
         XRecordFromServer, XRecordInterceptData, XRecordProcessReplies, XRecordRange,
@@ -163,11 +161,23 @@ impl Hook {
                             );
                         }
                     }
-                    QueueItem::ButtonPress(key, code) | QueueItem::ButtonRelease(key, code) => {
-                        if self.key_mask.remove(&code) {
+                    QueueItem::ButtonPress(key, code) => {
+                        if self.key_mask.insert(*code) {
                             cb(
                                 self.id,
                                 Event::KeyUp(crate::event::EventData {
+                                    code: key.clone(),
+                                    key: *code,
+                                    time,
+                                }),
+                            );
+                        }
+                    }
+                    QueueItem::ButtonRelease(key, code) => {
+                        if self.key_mask.remove(&code) {
+                            cb(
+                                self.id,
+                                Event::KeyDown(crate::event::EventData {
                                     code: key.clone(),
                                     key: *code,
                                     time,
@@ -248,8 +258,8 @@ impl Drop for X11State {
 
 fn get_mouse_key(is_press: bool, code: u8) -> Option<QueueItem> {
     let build = move |key: KeyCode, code: i32| match is_press {
-        true => QueueItem::ButtonPress(KeyCode::MouseLeft, -1),
-        false => QueueItem::ButtonRelease(KeyCode::MouseLeft, -1),
+        true => QueueItem::ButtonPress(key, code),
+        false => QueueItem::ButtonRelease(key, code),
     };
 
     match code {
