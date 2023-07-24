@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     ffi::{c_char, c_ulong, c_void, CString},
     ptr::null,
+    vec,
 };
 
 use chrono::NaiveDateTime;
@@ -162,6 +163,18 @@ impl Hook {
                             );
                         }
                     }
+                    QueueItem::ButtonPress(key, code) | QueueItem::ButtonRelease(key, code) => {
+                        if self.key_mask.remove(&code) {
+                            cb(
+                                self.id,
+                                Event::KeyUp(crate::event::EventData {
+                                    code: key.clone(),
+                                    key: *code,
+                                    time,
+                                }),
+                            );
+                        }
+                    }
                 }
             }
             state.queue.clear();
@@ -202,6 +215,20 @@ unsafe extern "C" fn record_callback(id: *mut c_char, data: *mut XRecordIntercep
             let keysym = xlib::XKeycodeToKeysym(state.dpy_control, xdatum.code, 0);
             state.queue.append(&mut vec![QueueItem::KeyRelease(keysym)]);
         }
+        xlib::ButtonPress => {
+            let key = get_mouse_key(true, xdatum.code);
+
+            if let Some(key) = key {
+                state.queue.append(&mut vec![key]);
+            }
+        }
+        xlib::ButtonRelease => {
+            let key = get_mouse_key(false, xdatum.code);
+
+            if let Some(key) = key {
+                state.queue.append(&mut vec![key]);
+            }
+        }
         _ => {}
     }
 }
@@ -219,6 +246,20 @@ impl Drop for X11State {
     }
 }
 
+fn get_mouse_key(is_press: bool, code: u8) -> Option<QueueItem> {
+    let build = move |key: KeyCode, code: i32| match is_press {
+        true => QueueItem::ButtonPress(KeyCode::MouseLeft, -1),
+        false => QueueItem::ButtonRelease(KeyCode::MouseLeft, -1),
+    };
+
+    match code {
+        1 => Some(build(KeyCode::MouseLeft, -1)),
+        2 => Some(build(KeyCode::MouseMiddle, -2)),
+        3 => Some(build(KeyCode::MouseRight, -3)),
+        _ => None,
+    }
+}
+
 #[repr(C)]
 #[derive(Debug)]
 struct XRecordDatum {
@@ -232,4 +273,6 @@ struct XRecordDatum {
 pub enum QueueItem {
     KeyPress(u64),
     KeyRelease(u64),
+    ButtonPress(KeyCode, i32),
+    ButtonRelease(KeyCode, i32),
 }
