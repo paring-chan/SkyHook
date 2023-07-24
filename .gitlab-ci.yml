@@ -23,9 +23,9 @@ workflow:
     - if: '$CI_COMMIT_BRANCH == "develop"'
       when: always
 
-build-win-linux:
+build-win:
   stage: build
-  image: pikokr/skyhook-builder
+  image: pikokr/skyhook-builder:cross-win
   tags:
     - arm64
     - linux
@@ -33,14 +33,42 @@ build-win-linux:
     - PKG_CONFIG_ALLOW_CROSS=1 RUSTFLAGS=-Clinker=/usr/bin/x86_64-linux-gnu-gcc cargo build -p skyhook-unity-native --target x86_64-unknown-linux-gnu --release
     - RUSTFLAGS=-Clinker=/usr/bin/x86_64-w64-mingw32-gcc cargo build -p skyhook-unity-native --target x86_64-pc-windows-gnu --release
     - RUSTFLAGS=-Clinker=/usr/bin/i686-w64-mingw32-gcc cargo build -p skyhook-unity-native --target i686-pc-windows-gnu --release
-    - cp target/x86_64-unknown-linux-gnu/release/libskyhook_unity.so ${UNITY_PLUGIN_PATH}/Plugins/x64
     - cp target/x86_64-pc-windows-gnu/release/skyhook_unity.dll ${UNITY_PLUGIN_PATH}/Plugins/x64
     - cp target/i686-pc-windows-gnu/release/skyhook_unity.dll ${UNITY_PLUGIN_PATH}/Plugins/i686
     - git config --global user.email "${CI_EMAIL}"
     - git config --global user.name "${CI_USERNAME}"
     - git add .
     - git remote set-url origin https://project_5_bot:${SKYHOOK_CI_TOKEN}@gitlab.paring.moe/skyhook/SkyHook.git
-    - 'git commit -m "chore: update unity native plugin [skip ci]" || echo nothing to commit'
+    - 'git commit -m "chore: update unity native plugin for windows [skip ci]" || echo nothing to commit'
+    - git push origin HEAD:$CI_COMMIT_REF_NAME
+  variables:
+    UNITY_PLUGIN_PATH: ${CI_PROJECT_DIR}/unity/UnityProject/Packages/moe.paring.skyhook
+    CI_EMAIL: skyhook-ci@gitlab.paring.moe
+    CI_USERNAME: SkyHook CI
+
+  cache:
+    policy: pull-push
+    unprotect: false
+    untracked: false
+    when: on_success
+    key: skyhook-unity-native
+    paths:
+      - 'target'
+
+build-linux:
+  stage: build
+  image: pikokr/skyhook-builder:linux
+  tags:
+    - amd64
+    - linux
+  script:
+    - cargo build -p skyhook-unity-native --target i686-pc-windows-gnu --release
+    - cp target/i686-pc-windows-gnu/release/skyhook_unity.dll ${UNITY_PLUGIN_PATH}/Plugins/i686
+    - git config --global user.email "${CI_EMAIL}"
+    - git config --global user.name "${CI_USERNAME}"
+    - git add .
+    - git remote set-url origin https://project_5_bot:${SKYHOOK_CI_TOKEN}@gitlab.paring.moe/skyhook/SkyHook.git
+    - 'git commit -m "chore: update unity native plugin for linux [skip ci]" || echo nothing to commit'
     - git push origin HEAD:$CI_COMMIT_REF_NAME
   variables:
     UNITY_PLUGIN_PATH: ${CI_PROJECT_DIR}/unity/UnityProject/Packages/moe.paring.skyhook
