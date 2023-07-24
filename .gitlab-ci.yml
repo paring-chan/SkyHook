@@ -39,7 +39,7 @@ build-win:
     - git add .
     - git remote set-url origin https://project_5_bot:${SKYHOOK_CI_TOKEN}@gitlab.paring.moe/skyhook/SkyHook.git
     - 'git commit -m "chore: update unity native plugin for windows [skip ci]" || echo nothing to commit'
-    - git pull --rebase
+    - git pull --rebase origin HEAD:${CI_COMMIT_REF_NAME}
     - git push origin HEAD:$CI_COMMIT_REF_NAME
   variables:
     UNITY_PLUGIN_PATH: ${CI_PROJECT_DIR}/unity/UnityProject/Packages/moe.paring.skyhook
@@ -69,7 +69,7 @@ build-linux:
     - git add .
     - git remote set-url origin https://project_5_bot:${SKYHOOK_CI_TOKEN}@gitlab.paring.moe/skyhook/SkyHook.git
     - 'git commit -m "chore: update unity native plugin for linux [skip ci]" || echo nothing to commit'
-    - git pull --rebase
+    - git pull --rebase origin ${CI_COMMIT_REF_NAME}
     - git push origin HEAD:$CI_COMMIT_REF_NAME
   variables:
     UNITY_PLUGIN_PATH: ${CI_PROJECT_DIR}/unity/UnityProject/Packages/moe.paring.skyhook
