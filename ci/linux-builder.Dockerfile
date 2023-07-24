@@ -4,6 +4,7 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
+    gcc-x86-64-linux-gnu \
     mingw-w64 \
     git \
     pkg-config \
