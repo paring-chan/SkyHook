@@ -6,7 +6,9 @@ use core_foundation::{
 };
 use core_graphics::event::{CGEvent, CGEventTap, CGEventTapProxy, CGEventType};
 
-use crate::Hook;
+use crate::{Hook, KeyCode};
+
+mod keycode;
 
 static mut STATE_MAP: Option<HashMap<usize, OSXHookState>> = None;
 
@@ -25,16 +27,68 @@ struct OSXHookState {
 }
 
 impl Hook {
+    fn down(&mut self, code: KeyCode, key: i64) {
+        if self.key_mask.insert(key as i32) {
+            (self.callback)(
+                self.id,
+                crate::Event::KeyDown(crate::event::EventData {
+                    code,
+                    key: key as i32,
+                    time: chrono::Local::now().naive_local(),
+                }),
+            );
+        }
+    }
+    fn up(&mut self, code: KeyCode, key: i64) {
+        if self.key_mask.remove(&(key as i32)) {
+            (self.callback)(
+                self.id,
+                crate::Event::KeyUp(crate::event::EventData {
+                    code,
+                    key: key as i32,
+                    time: chrono::Local::now().naive_local(),
+                }),
+            );
+        }
+    }
+
+    // fn modifier(&self, code: KeyCode, key: i64, pressed: bool) {
+    //     if pressed {
+    //         self.down(code, key);
+    //     } else {
+    //         self.up(code, key);
+    //     }
+    // }
+
     pub(crate) fn initialize(&mut self) -> Result<(), String> {
         unsafe {
-            // TODO: Register EventTap
             let state_map = get_state_map();
             if let Some(_) = state_map.get(&self.id) {
                 return Err("Hook already initialized".to_string());
             }
 
+            let _self = self as *mut Hook;
+
             let callback = |_: CGEventTapProxy, event_type: CGEventType, event: &CGEvent| {
-                dbg!(event_type);
+                match event_type {
+                    CGEventType::KeyDown => {
+                        let key = event.get_integer_value_field(9);
+                        (*_self).down(KeyCode::from_virtual(key), key)
+                    }
+                    CGEventType::KeyUp => {
+                        let key = event.get_integer_value_field(9);
+
+                        (*_self).up(KeyCode::from_virtual(key), key)
+                    }
+                    CGEventType::LeftMouseDown => (*_self).down(KeyCode::MouseLeft, -1),
+                    CGEventType::LeftMouseUp => (*_self).up(KeyCode::MouseLeft, -1),
+                    CGEventType::RightMouseDown => (*_self).down(KeyCode::MouseRight, -2),
+                    CGEventType::RightMouseUp => (*_self).up(KeyCode::MouseRight, -2),
+                    CGEventType::OtherMouseDown => (*_self).down(KeyCode::MouseMiddle, -3),
+                    CGEventType::OtherMouseUp => (*_self).up(KeyCode::MouseMiddle, -3),
+                    CGEventType::FlagsChanged => {}
+                    _ => {}
+                }
                 return Some(event.clone());
             };
 
