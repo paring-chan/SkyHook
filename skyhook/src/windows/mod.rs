@@ -82,4 +82,6 @@ impl Hook {
             }
         }
     }
+
+    pub(crate) fn finalize(&mut self) {}
 }

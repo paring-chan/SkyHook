@@ -70,7 +70,6 @@ impl Hook {
             );
         }
 
-        #[cfg(target_os = "linux")]
         self.finalize();
 
         self.running.store(false, Ordering::SeqCst);
