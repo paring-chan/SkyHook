@@ -57,7 +57,7 @@ impl KeyCode {
             0x33 => Self::Backspace,
             // skip
             0x35 => Self::Escape,
-            // skip
+            0x36 => Self::RMeta,
             0x37 => Self::LMeta,
             0x38 => Self::LShift,
             0x39 => Self::CapsLock,

@@ -6,7 +6,7 @@ use core_foundation::{
 };
 use core_graphics::event::{CGEvent, CGEventTap, CGEventTapProxy, CGEventType};
 
-use crate::{Hook, KeyCode};
+use crate::{debug, Hook, KeyCode};
 
 mod keycode;
 
@@ -52,13 +52,13 @@ impl Hook {
         }
     }
 
-    // fn modifier(&self, code: KeyCode, key: i64, pressed: bool) {
-    //     if pressed {
-    //         self.down(code, key);
-    //     } else {
-    //         self.up(code, key);
-    //     }
-    // }
+    fn modifier(&mut self, code: KeyCode, key: i64, pressed: bool) {
+        if !pressed {
+            self.down(code, key);
+        } else {
+            self.up(code, key);
+        }
+    }
 
     pub(crate) fn initialize(&mut self) -> Result<(), String> {
         unsafe {
@@ -86,7 +86,11 @@ impl Hook {
                     CGEventType::RightMouseUp => (*_self).up(KeyCode::MouseRight, -2),
                     CGEventType::OtherMouseDown => (*_self).down(KeyCode::MouseMiddle, -3),
                     CGEventType::OtherMouseUp => (*_self).up(KeyCode::MouseMiddle, -3),
-                    CGEventType::FlagsChanged => {}
+                    CGEventType::FlagsChanged => {
+                        let key = debug!(event.get_integer_value_field(9));
+                        let code = debug!(KeyCode::from_virtual(key));
+                        (*_self).modifier(code, key, self.key_mask.contains(&(key as i32)))
+                    }
                     _ => {}
                 }
                 return Some(event.clone());
