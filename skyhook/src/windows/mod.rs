@@ -84,4 +84,5 @@ impl Hook {
     }
 
     pub(crate) fn finalize(&mut self) {}
+    pub(crate) fn pre_stop(&mut self) {}
 }

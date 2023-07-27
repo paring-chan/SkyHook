@@ -5,9 +5,12 @@ use std::{
         Arc,
     },
     thread,
-    time::Instant,
 };
 
+#[cfg(not(target_os = "macos"))]
+use time::Instant;
+
+#[cfg(not(target_os = "macos"))]
 use chrono::Local;
 
 use crate::{debug, Event};
@@ -54,6 +57,7 @@ impl Hook {
 
         debug!(self.running.store(true, Ordering::SeqCst));
 
+        #[cfg(not(target_os = "macos"))]
         loop {
             if self.cancelled.load(Ordering::SeqCst) {
                 break;
@@ -89,6 +93,8 @@ impl Hook {
 
     pub fn stop_polling(&mut self) {
         self.cancelled.store(true, Ordering::SeqCst);
+
+        self.pre_stop();
 
         while self.running.load(Ordering::SeqCst) {
             thread::yield_now();

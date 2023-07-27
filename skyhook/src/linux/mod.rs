@@ -200,6 +200,8 @@ impl Hook {
             state_id_map.remove(&self.id);
         }
     }
+
+    pub(crate) fn pre_stop(&mut self) {}
 }
 
 unsafe extern "C" fn record_callback(id: *mut c_char, data: *mut XRecordInterceptData) {

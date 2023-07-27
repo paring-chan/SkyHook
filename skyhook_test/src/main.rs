@@ -32,7 +32,11 @@ fn main() {
 
     hook.wait_for_start().unwrap();
 
+    println!("started");
+
     thread::park_timeout(Duration::from_secs(5));
 
     hook.stop_polling();
+
+    println!("stopped");
 }
