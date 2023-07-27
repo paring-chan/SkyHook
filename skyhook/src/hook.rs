@@ -7,12 +7,6 @@ use std::{
     thread,
 };
 
-#[cfg(not(target_os = "macos"))]
-use time::Instant;
-
-#[cfg(not(target_os = "macos"))]
-use chrono::Local;
-
 use crate::{debug, Event};
 
 static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -63,8 +57,8 @@ impl Hook {
                 break;
             }
 
-            let instant_at_frame_start = Instant::now();
-            let time = Local::now().naive_local();
+            let instant_at_frame_start = std::time::Instant::now();
+            let time = chrono::Local::now().naive_local();
 
             self.poll(time);
 
