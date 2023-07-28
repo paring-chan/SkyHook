@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using SkyHook.Interop;
 using UnityEngine;
 
@@ -21,6 +22,9 @@ namespace SkyHook
 
         public bool IsRunning => SkyHookNative.GetRunning(_id);
 
+        private Thread _thread;
+        private bool _dummy;
+
         private void Awake()
         {
             _id = SkyHookNative.NewHook();
@@ -28,10 +32,34 @@ namespace SkyHook
 
         public void StartHook()
         {
-            var result = SkyHookNative.StartHook(_id);
-            if (!string.IsNullOrEmpty(result))
+            var started = false;
+            string error = null;
+            
+            _thread = new Thread(() =>
             {
-                throw new SkyHookException(result);
+                var result = SkyHookNative.StartHook(_id);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    error = result;
+                    return;
+                }
+
+                started = true;
+
+                while (IsRunning)
+                {
+                    _dummy = !_dummy;
+                }
+            });
+            
+            _thread.Start();
+
+            while (!started)
+            {
+                if (!string.IsNullOrEmpty(error))
+                {
+                    throw new SkyHookException(error);
+                }
             }
         }
 
