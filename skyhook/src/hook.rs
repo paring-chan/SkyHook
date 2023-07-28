@@ -70,6 +70,9 @@ impl Hook {
 
         self.finalize();
 
+        self.key_mask.clear();
+        self.error = None;
+
         self.running.store(false, Ordering::SeqCst);
         self.cancelled.store(false, Ordering::SeqCst);
     }

@@ -27,6 +27,19 @@ namespace SkyHookTest
                 hook.PollingFrequency += 50;
             }
 
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Debug.Log(hook.IsRunning);
+                if (hook.IsRunning)
+                {
+                    hook.StopHook();
+                }
+                else
+                {
+                    hook.StartHook();
+                }
+            }
+
             if (!Application.isFocused)
             {
                 hook.ReadQueue();
@@ -50,7 +63,7 @@ namespace SkyHookTest
                 ? EventToString(_lastEvent.Value)
                 : "None";
             GUI.Label(new Rect(0, 0, 480, 240),
-                $"PollingFrequency: {hook.PollingFrequency}\nLast Event: {ev}");
+                $"PollingFrequency: {hook.PollingFrequency}\nLast Event: {ev}\nRunning: {hook.IsRunning}");
         }
     }
 }

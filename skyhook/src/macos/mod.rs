@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use core_foundation::{
     base::kCFAllocatorDefault,
-    runloop::{kCFRunLoopDefaultMode, CFRunLoop},
+    runloop::{kCFRunLoopDefaultMode, CFRunLoop, CFRunLoopSource},
 };
 use core_graphics::event::{CGEvent, CGEventTap, CGEventTapProxy, CGEventType};
 
@@ -24,6 +24,7 @@ fn get_state_map() -> &'static mut HashMap<usize, OSXHookState> {
 
 struct OSXHookState {
     run_loop: CFRunLoop,
+    loop_source: CFRunLoopSource,
 }
 
 impl Hook {
@@ -126,14 +127,23 @@ impl Hook {
 
             run_loop.add_source(&loop_source, kCFRunLoopDefaultMode);
 
-            let state = OSXHookState { run_loop };
+            let state = OSXHookState {
+                run_loop,
+                loop_source,
+            };
 
             state_map.insert(self.id, state);
+            let state = state_map.get(&self.id).unwrap();
 
             self.running
                 .store(true, std::sync::atomic::Ordering::SeqCst);
 
             CFRunLoop::run_current();
+
+            state
+                .run_loop
+                .remove_source(&state.loop_source, kCFRunLoopDefaultMode);
+
             Ok(())
         }
     }
@@ -142,7 +152,7 @@ impl Hook {
 
     pub(crate) fn pre_stop(&mut self) {
         let state_map = get_state_map();
-        if let Some(state) = state_map.get(&self.id) {
+        if let Some(state) = state_map.remove(&self.id) {
             state.run_loop.stop();
         }
     }

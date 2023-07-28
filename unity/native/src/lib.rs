@@ -126,6 +126,16 @@ pub extern "C" fn skyhook_read_queue(id: usize, cb: extern "C" fn(NativeEvent)) 
 }
 
 #[no_mangle]
+pub extern "C" fn skyhook_get_running(id: usize) -> bool {
+    let hook = get_hook(id);
+    if hook.is_err() {
+        return false;
+    }
+    let hook = hook.unwrap();
+    hook.running.load(std::sync::atomic::Ordering::SeqCst)
+}
+
+#[no_mangle]
 pub extern "C" fn skyhook_get_time() -> NativeTime {
     let now = Local::now().naive_local();
 

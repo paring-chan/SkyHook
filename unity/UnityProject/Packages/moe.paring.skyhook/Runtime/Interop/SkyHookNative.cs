@@ -31,5 +31,8 @@ namespace SkyHook.Interop
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "skyhook_set_polling_frequency")]
         public static extern string SetPollingFrequency(ulong id, ulong value);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "skyhook_get_running")]
+        public static extern bool GetRunning(ulong id);
     }
 }

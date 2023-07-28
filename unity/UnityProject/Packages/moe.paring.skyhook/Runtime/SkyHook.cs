@@ -19,6 +19,8 @@ namespace SkyHook
             }
         }
 
+        public bool IsRunning => SkyHookNative.GetRunning(_id);
+
         private void Awake()
         {
             _id = SkyHookNative.NewHook();
