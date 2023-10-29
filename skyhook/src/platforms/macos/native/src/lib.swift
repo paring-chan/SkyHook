@@ -17,6 +17,7 @@ public func startMacOSHook(callback: EventCallback) -> UnsafePointer<CChar>? {
     do {
         try hook!.start()
     } catch {
+        hook = nil
         return (error.localizedDescription as NSString).utf8String
     }
 
