@@ -12,12 +12,12 @@ public func startMacOSHook(callback: EventCallback) -> UnsafePointer<CChar>? {
         return ("Hook is already running" as NSString).utf8String
     }
 
-    hook = MacOSHook(callback: callback)
+    var newHook = MacOSHook(callback: callback)
 
     do {
-        try hook!.start()
+        try newHook.start()
+        hook = newHook
     } catch {
-        hook = nil
         return (error.localizedDescription as NSString).utf8String
     }
 
