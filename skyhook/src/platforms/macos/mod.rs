@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::thread;
 use std::thread::Builder;
 
 use crate::types::{Error, Event, EventData};
@@ -145,6 +146,8 @@ pub fn start(#[allow(unused_variables)] callback: fn(Event)) -> Result<(), Error
             LOOP = Some(run_loop);
             IS_RUNNING = true;
 
+            RESULT = Some(Ok(()));
+
             let run_loop = match &LOOP {
                 Some(v) => v,
                 _ => return
@@ -156,18 +159,17 @@ pub fn start(#[allow(unused_variables)] callback: fn(Event)) -> Result<(), Error
 
             run_loop.remove_source(&loop_source, kCFRunLoopDefaultMode);
         }).expect("Unable to create thread");
+
         loop {
-            if let Some(result) = &RESULT {
+            if let Some(result) = RESULT.as_ref() {
                 let result = result.clone();
                 RESULT = None;
                 return match result {
                     Ok(_) => Ok(()),
-                    Err(e) => {
-                        println!("err: {:?}", e);
-                        Err(Error { message: e.clone() })
-                    }
+                    Err(e) => Err(Error { message: e.clone() })
                 };
             }
+            thread::yield_now();
         }
     }
 }
