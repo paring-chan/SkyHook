@@ -4,6 +4,7 @@ use std::ptr::null_mut;
 use std::thread;
 use std::thread::Builder;
 
+use cacao::defaults::UserDefaults;
 use core_foundation::{
     base::kCFAllocatorDefault,
     runloop::{CFRunLoop, kCFRunLoopDefaultMode},
@@ -14,7 +15,7 @@ use core_foundation::number::{CFNumberCreate, kCFNumberIntType};
 use core_foundation::runloop::CFRunLoopGetCurrent;
 use io_kit_sys::CFSTR;
 use io_kit_sys::hid::base::{IOHIDValueCallback, IOHIDValueRef};
-use io_kit_sys::hid::element::{IOHIDElementGetUsage, IOHIDElementGetUsagePage};
+use io_kit_sys::hid::element::IOHIDElementGetUsage;
 use io_kit_sys::hid::keys::{kIOHIDOptionsTypeNone, kIOHIDPrimaryUsageKey};
 use io_kit_sys::hid::manager::{IOHIDManagerCreate, IOHIDManagerOpen, IOHIDManagerRegisterInputValueCallback, IOHIDManagerScheduleWithRunLoop, IOHIDManagerSetDeviceMatching};
 use io_kit_sys::hid::usage_tables::*;
@@ -90,6 +91,24 @@ unsafe extern "C" fn keyboard_callback(
     }
 }
 
+fn swap_button(left: bool) -> VK {
+    let swapped = match UserDefaults::standard().get("com.apple.mouse.swapLeftRightButton") {
+        Some(v) => match v.as_bool() {
+            Some(v) => v,
+            None => false
+        }
+        None => false
+    };
+    let mut left = left;
+    if swapped {
+        left = !left;
+    }
+    return match left {
+        true => MouseLeft,
+        false => MouseRight
+    };
+}
+
 #[allow(non_upper_case_globals)]
 unsafe extern "C" fn mouse_callback(
     _context: *mut c_void,
@@ -107,8 +126,8 @@ unsafe extern "C" fn mouse_callback(
     }
 
     let vk = match button_code {
-        kHIDUsage_Button_1 => MouseLeft,
-        kHIDUsage_Button_2 => MouseRight,
+        kHIDUsage_Button_1 => swap_button(true),
+        kHIDUsage_Button_2 => swap_button(false),
         kHIDUsage_Button_3 => MouseMiddle,
         kHIDUsage_Button_4 => MouseX1,
         0x05 => MouseX2,
