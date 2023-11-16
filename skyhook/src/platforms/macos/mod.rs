@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use std::os::raw::c_void;
+use std::ptr::null_mut;
 use std::thread;
 use std::thread::Builder;
 
@@ -7,8 +9,20 @@ use core_foundation::{
     base::kCFAllocatorDefault,
     runloop::{kCFRunLoopDefaultMode, CFRunLoop},
 };
+use core_foundation::base::ToVoid;
+use core_foundation::dictionary::{CFDictionaryCreateMutable, CFDictionarySetValue, kCFTypeDictionaryKeyCallBacks, kCFTypeDictionaryValueCallBacks};
+use core_foundation::number::{CFNumberCreate, kCFNumberIntType};
+use core_foundation::runloop::{CFRunLoopGetCurrent, CFRunLoopRun};
 
 use core_graphics::event::{CGEvent, CGEventTap, CGEventTapProxy, CGEventType};
+use io_kit_sys::CFSTR;
+use io_kit_sys::hid::base::IOHIDValueRef;
+use io_kit_sys::hid::element::IOHIDElementGetUsage;
+use io_kit_sys::hid::keys::{kIOHIDOptionsTypeNone, kIOHIDPrimaryUsageKey};
+use io_kit_sys::hid::manager::{IOHIDManagerCreate, IOHIDManagerOpen, IOHIDManagerRegisterInputValueCallback, IOHIDManagerScheduleWithRunLoop, IOHIDManagerSetDeviceMatching};
+use io_kit_sys::hid::usage_tables::kHIDUsage_GD_Keyboard;
+use io_kit_sys::hid::value::{IOHIDValueGetElement, IOHIDValueGetIntegerValue};
+use io_kit_sys::ret::{IOReturn, kIOReturnNotPermitted};
 use crate::debug;
 use crate::keycodes::VK;
 use crate::platforms::macos::keycode::raw_keycode_to_vk;
@@ -53,15 +67,30 @@ unsafe fn up(code: VK, key: i64) {
     }
 }
 
-unsafe fn modifier(code: VK, key: i64) {
-    let pressed = get_keys().contains(&key);
+unsafe extern "C" fn keyboard_callback(
+    _context: *mut c_void,
+    _result: IOReturn,
+    _sender: *mut c_void,
+    value: IOHIDValueRef,
+) {
+    let element = IOHIDValueGetElement(value);
+    // let device = IOHIDElementGetDevice(element);
+    let key_code = IOHIDElementGetUsage(element);
+    let element_value = IOHIDValueGetIntegerValue(value);
 
-    if pressed {
-        up(code, key);
-    } else {
-        down(code, key);
+    if key_code == u32::MAX || key_code == 1 {
+        return;
+    }
+
+    let vk = raw_keycode_to_vk(key_code);
+
+    match element_value {
+        0 => up(vk, key_code as i64),
+        1 => down(vk, key_code as i64),
+        _ => return
     }
 }
+
 
 pub fn start(#[allow(unused_variables)] callback: fn(Event)) -> Result<(), Error> {
     unsafe {
@@ -73,91 +102,53 @@ pub fn start(#[allow(unused_variables)] callback: fn(Event)) -> Result<(), Error
                 return;
             }
 
-            let callback = |_: CGEventTapProxy, event_type: CGEventType, event: &CGEvent| {
-                match event_type {
-                    CGEventType::KeyDown => {
-                        let key = event.get_integer_value_field(9);
-                        down(raw_keycode_to_vk(key as u16), key)
-                    }
-                    CGEventType::KeyUp => {
-                        let key = event.get_integer_value_field(9);
+            let device_type: *const c_void = (&kHIDUsage_GD_Keyboard as *const u32) as *const c_void;
 
-                        up(raw_keycode_to_vk(key as u16), key)
-                    }
-                    CGEventType::LeftMouseDown => down(VK::MouseLeft, -1),
-                    CGEventType::LeftMouseUp => up(VK::MouseLeft, -1),
-                    CGEventType::RightMouseDown => down(VK::MouseRight, -2),
-                    CGEventType::RightMouseUp => up(VK::MouseRight, -2),
-                    CGEventType::OtherMouseDown => down(VK::MouseMiddle, -3),
-                    CGEventType::OtherMouseUp => up(VK::MouseMiddle, -3),
-                    CGEventType::FlagsChanged => {
-                        let key = debug!(event.get_integer_value_field(9));
-                        let code = debug!(raw_keycode_to_vk(key as u16));
-                        modifier(code, key)
-                    }
-                    _ => {}
-                }
-                return Some(event.clone());
-            };
+            let hid_manager = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
 
-            let event_tap = match CGEventTap::new(
-                core_graphics::event::CGEventTapLocation::Session,
-                core_graphics::event::CGEventTapPlacement::HeadInsertEventTap,
-                core_graphics::event::CGEventTapOptions::Default,
-                vec![
-                    CGEventType::KeyDown,
-                    CGEventType::KeyUp,
-                    CGEventType::LeftMouseDown,
-                    CGEventType::LeftMouseUp,
-                    CGEventType::RightMouseDown,
-                    CGEventType::RightMouseUp,
-                    CGEventType::OtherMouseDown,
-                    CGEventType::OtherMouseUp,
-                    CGEventType::FlagsChanged,
-                ],
-                callback,
-            ) {
-                Ok(v) => v,
-                Err(_) => {
-                    RESULT = Some(Err("Failed to create event tap".to_string()));
+            let match_dict = CFDictionaryCreateMutable(
+                kCFAllocatorDefault,
+                2,
+                &kCFTypeDictionaryKeyCallBacks,
+                &kCFTypeDictionaryValueCallBacks,
+            );
 
-                    return;
-                }
-            };
+            CFDictionarySetValue(
+                match_dict,
+                CFSTR(kIOHIDPrimaryUsageKey).to_void(),
+                CFNumberCreate(
+                    kCFAllocatorDefault,
+                    kCFNumberIntType,
+                    device_type,
+                ).to_void(),
+            );
+
+            IOHIDManagerSetDeviceMatching(
+                hid_manager,
+                match_dict,
+            );
+            IOHIDManagerScheduleWithRunLoop(
+                hid_manager,
+                CFRunLoopGetCurrent(),
+                kCFRunLoopDefaultMode,
+            );
 
 
-            let loop_source = match event_tap
-                .mach_port
-                .create_runloop_source(kCFAllocatorDefault as isize)
-                .map_err(|_| "Failed to create runloop source".to_string()) {
-                Ok(v) => v,
-                Err(e) => {
-                    RESULT = Some(Err(e));
-                    return;
-                }
-            };
+            let result = IOHIDManagerOpen(hid_manager, kIOHIDOptionsTypeNone);
 
-            event_tap.enable();
+            if result == kIOReturnNotPermitted {
+                RESULT = Some(Err("NOT_PERMITTED".to_string()));
+                return;
+            }
 
-            let run_loop = CFRunLoop::get_current();
+            IOHIDManagerRegisterInputValueCallback(hid_manager, keyboard_callback, null_mut());
 
-            run_loop.add_source(&loop_source, kCFRunLoopDefaultMode);
-
-            LOOP = Some(run_loop);
-            IS_RUNNING = true;
+            LOOP = Some(CFRunLoop::get_current());
 
             RESULT = Some(Ok(()));
-
-            let run_loop = match &LOOP {
-                Some(v) => v,
-                _ => return
-            };
+            IS_RUNNING = true;
 
             CFRunLoop::run_current();
-
-            IS_RUNNING = false;
-
-            run_loop.remove_source(&loop_source, kCFRunLoopDefaultMode);
         }).expect("Unable to create thread");
 
         loop {
