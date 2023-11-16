@@ -141,7 +141,7 @@ unsafe extern "C" fn mouse_callback(
     }
 }
 
-unsafe fn watch(device_type: *const c_void, callback: IOHIDValueCallback) {
+unsafe fn watch(device_type: *const c_void, callback: IOHIDValueCallback) -> Result<(), String> {
     let hid_manager = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
 
     let match_dict = CFDictionaryCreateMutable(
@@ -175,11 +175,12 @@ unsafe fn watch(device_type: *const c_void, callback: IOHIDValueCallback) {
     let result = IOHIDManagerOpen(hid_manager, kIOHIDOptionsTypeNone);
 
     if result == kIOReturnNotPermitted {
-        RESULT = Some(Err("NOT_PERMITTED".to_string()));
-        return;
+        return Err("NOT_PERMITTED".to_string());
     }
 
     IOHIDManagerRegisterInputValueCallback(hid_manager, callback, null_mut());
+
+    Ok(())
 }
 
 pub fn start(#[allow(unused_variables)] callback: fn(Event)) -> Result<(), Error> {
@@ -192,8 +193,14 @@ pub fn start(#[allow(unused_variables)] callback: fn(Event)) -> Result<(), Error
                 return;
             }
 
-            watch((&kHIDUsage_GD_Keyboard as *const u32) as *const c_void, keyboard_callback);
-            watch((&kHIDUsage_GD_Mouse as *const u32) as *const c_void, mouse_callback);
+            if let Err(err) = watch((&kHIDUsage_GD_Keyboard as *const u32) as *const c_void, keyboard_callback) {
+                RESULT = Some(Err(err));
+                return;
+            }
+            if let Err(err) = watch((&kHIDUsage_GD_Mouse as *const u32) as *const c_void, mouse_callback) {
+                RESULT = Some(Err(err));
+                return;
+            }
 
             LOOP = Some(CFRunLoop::get_current());
 
@@ -201,6 +208,8 @@ pub fn start(#[allow(unused_variables)] callback: fn(Event)) -> Result<(), Error
             IS_RUNNING = true;
 
             CFRunLoop::run_current();
+
+            IS_RUNNING = false;
         }).expect("Unable to create thread");
 
         loop {
@@ -225,6 +234,13 @@ pub fn stop() -> Result<(), Error> {
 
         if let Some(run_loop) = &LOOP {
             run_loop.stop();
+        }
+
+        loop {
+            if !IS_RUNNING {
+                break;
+            }
+            thread::yield_now()
         }
     }
 
