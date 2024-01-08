@@ -48,29 +48,25 @@ pub fn start(callback: fn(Event)) -> Result<(), Error> {
     unsafe { LISTEN_ERROR = None }
 
     let thread = Builder::new().spawn(|| {
-        let registered_keyboard_hook = HHOOK::SetWindowsHookEx(
-            WH::KEYBOARD_LL,
-            keyboard::hook_callback,
-            Some(HINSTANCE::NULL),
-            Some(0),
-        );
-
-        let registered_mouse_hook = HHOOK::SetWindowsHookEx(
-            WH::MOUSE_LL,
-            mouse::hook_callback,
-            Some(HINSTANCE::NULL),
-            Some(0),
-        );
-
         unsafe {
-            KBD_HOOK_ID = match registered_keyboard_hook {
+            KBD_HOOK_ID = match HHOOK::SetWindowsHookEx(
+                WH::KEYBOARD_LL,
+                keyboard::hook_callback,
+                Some(HINSTANCE::NULL),
+                Some(0),
+            ) {
                 Ok(h) => Some(h),
                 Err(err) => {
                     LISTEN_ERROR = Some(err);
                     return;
                 }
             };
-            MOUSE_HOOK_ID = match registered_mouse_hook {
+            MOUSE_HOOK_ID = match HHOOK::SetWindowsHookEx(
+                WH::MOUSE_LL,
+                mouse::hook_callback,
+                Some(HINSTANCE::NULL),
+                Some(0),
+            ) {
                 Ok(h) => Some(h),
                 Err(err) => {
                     LISTEN_ERROR = Some(err);
